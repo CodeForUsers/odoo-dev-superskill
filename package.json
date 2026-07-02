@@ -1,13 +1,17 @@
 {
   "name": "odoo-dev-superskill",
-  "version": "1.0.0",
-  "description": "The Ultimate AI Agent Skill for Odoo Module Development (16.0–19.0)",
+  "version": "1.0.1",
+  "description": "Odoo Module Development Skill for AI Agents (16.0–19.0)",
   "main": "bin/install.js",
   "bin": {
     "odoo-dev-superskill": "./bin/install.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CodeForUsers/odoo-dev-superskill.git"
   },
   "keywords": [
     "odoo",
@@ -20,5 +24,9 @@
   ],
   "author": "David Carreres Gómez",
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/CodeForUsers/odoo-dev-superskill/issues"
+  },
+  "homepage": "https://github.com/CodeForUsers/odoo-dev-superskill#readme",
   "dependencies": {}
 }
