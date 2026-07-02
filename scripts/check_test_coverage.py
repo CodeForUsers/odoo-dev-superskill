@@ -240,13 +240,20 @@ class TestCoverageChecker:
         self.info.append(f"Test classes: {len(self.test_classes)}")
         self.info.append(f"Test methods: {len(self.test_methods)}")
 
-        # Ratio check
-        if len(self.test_methods) < len(self.models_found) * 3:
-            self.warnings.append(
-                f"Low test-to-model ratio: {len(self.test_methods)} tests for "
-                f"{len(self.models_found)} models. "
-                f"Recommended minimum: {len(self.models_found) * 3} tests "
-                f"(3 per model for basic CRUD)."
+        # Calculate coverage percentage (heuristic based on 3 tests per model)
+        expected_tests = len(self.models_found) * 3
+        if expected_tests > 0:
+            coverage_pct = min(100.0, (len(self.test_methods) / expected_tests) * 100.0)
+        else:
+            coverage_pct = 100.0 if self.test_methods else 0.0
+
+        self.info.append(f"Estimated Test Coverage: {coverage_pct:.1f}%")
+
+        if coverage_pct < 80.0:
+            self.errors.append(
+                f"Test coverage is below 80% ({coverage_pct:.1f}%). "
+                f"Found {len(self.test_methods)} tests for {len(self.models_found)} models. "
+                f"Require at least 3 tests per model."
             )
 
     def print_report(self):

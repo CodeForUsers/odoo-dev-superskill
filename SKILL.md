@@ -78,12 +78,12 @@ Estas reglas aplican **siempre**, independientemente de la versión de Odoo:
 
 ## 4. Diferencias clave por versión
 
-| Versión | Tag vista lista | Cambio ORM clave | Frontend |
-|---------|----------------|-------------------|----------|
-| 16.0 | `<tree>` | Mejoras en `read_group` | OWL 1/2 en transición |
-| 17.0 | `<tree>` | Wrapper `SQL()` seguro | OWL 2 consolidado |
-| 18.0 | `<list>` (**breaking**) | `_read_group` reemplaza `read_group` | Hoot reemplaza QUnit |
-| 19.0 | `<list>` | `_search_display_name`, GROUPING SETS | Continuidad OWL 2 |
+| Versión | Tag vista lista | UI Condicional | Cambio ORM clave | Frontend |
+|---------|----------------|-----------------|-------------------|----------|
+| 16.0 | `<tree>` | `attrs="{...}"` | Mejoras en `read_group` | OWL 1/2 en transición |
+| 17.0 | `<tree>` | `invisible="..."` | Wrapper `SQL()` seguro | OWL 2 consolidado |
+| 18.0 | `<list>` (**breaking**) | `invisible="..."` | `_read_group` reemplaza `read_group` | Hoot reemplaza QUnit |
+| 19.0 | `<list>` | `invisible="..."` | `_search_display_name`, GROUPING SETS | Continuidad OWL 2 |
 
 > **Regla de oro**: antes de generar cualquier vista, consulta esta tabla y usa
 > `<tree>` o `<list>` según la versión objetivo. **Nunca asumas por defecto.**
@@ -142,12 +142,17 @@ Para el detalle completo de cada versión, consulta `references/version-matrix.m
 
 ### Seguridad y Rendimiento
 
-| Template | Uso |
-|----------|-----|
+| Archivo | Uso |
+|---------|-----|
 | `references/sql-performance.md` | Guía de uso de SQL directo (Bypass de ORM) y caché |
 | `templates/security/multi_company_rules.xml.tpl`| Reglas `ir.rule` avanzadas para entornos multi-empresa |
 | `templates/security/ir.model.access.csv.tpl` | ACLs con nomenclatura OCA |
 | `templates/security/security.xml.tpl` | Grupos User/Manager + reglas estándar |
+
+### Datos Iniciales y Demo
+
+| Template | Uso |
+|----------|-----|
 | `templates/data/data.xml.tpl` | Datos iniciales (params, email templates, server actions) |
 | `templates/data/demo_data.xml.tpl` | Datos de demostración con noupdate=1 |
 
