@@ -4,6 +4,7 @@
 
 ![Version](https://img.shields.io/badge/Odoo-16.0%20%7C%2017.0%20%7C%2018.0%20%7C%2019.0-714B67?style=for-the-badge&logo=odoo&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)
+[![skills.sh](https://skills.sh/b/CodeForUsers/odoo-dev-superskill)](https://skills.sh/CodeForUsers/odoo-dev-superskill)
 
 A comprehensive AI agent skill providing scaffolding, refactoring tools, and architecture templates for Odoo module development. Enforces Odoo Community Association (OCA) coding standards and security guidelines across Odoo versions 16.0 through 19.0.
 
