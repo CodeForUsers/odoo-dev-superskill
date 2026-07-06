@@ -1,16 +1,16 @@
 # Security — Odoo OCA Development
 
-Guía de seguridad para módulos Odoo (16.0–19.0). Las reglas de seguridad son
-**idénticas en las 4 versiones** salvo diferencias menores indicadas.
+Security guide for Odoo modules (16.0–19.0). Security rules are
+**identical in all 4 versions** except for minor indicated differences.
 
 ---
 
-## 1. Listas de Control de Acceso (ACL)
+## 1. Access Control Lists (ACL)
 
-### Archivo `ir.model.access.csv`
+### `ir.model.access.csv` File
 
-Cada modelo nuevo **debe** tener al menos una línea de ACL. Sin ella, el modelo
-es inaccesible y Odoo muestra un error de seguridad.
+Every new model **must** have at least one ACL line. Without it, the model
+is inaccessible and Odoo displays a security error.
 
 ```csv
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
@@ -20,47 +20,47 @@ access_sale_order_line_user,sale.order.line.user,model_sale_order_line,sales_tea
 access_sale_order_line_manager,sale.order.line.manager,model_sale_order_line,sales_team.group_sale_manager,1,1,1,1
 ```
 
-### Reglas de nomenclatura
+### Naming Rules
 
-| Campo | Patrón |
-|-------|--------|
-| `id` | `access_<modelo_con_underscores>_<grupo>` |
-| `name` | `<modelo.con.puntos>.<grupo>` |
-| `model_id:id` | `model_<modelo_con_underscores>` |
-| `group_id:id` | `<modulo>.<xml_id_del_grupo>` |
+| Field | Pattern |
+|-------|---------|
+| `id` | `access_<model_with_underscores>_<group>` |
+| `name` | `<model.with.dots>.<group>` |
+| `model_id:id` | `model_<model_with_underscores>` |
+| `group_id:id` | `<module>.<xml_id_of_the_group>` |
 
-### Checklist ACL
+### ACL Checklist
 
-- [ ] ¿Cada modelo nuevo tiene al menos una ACL?
-- [ ] ¿Los modelos TransientModel (wizards) tienen ACL para los grupos que los usan?
-- [ ] ¿Los permisos de `unlink` están restringidos a managers/admins?
-- [ ] ¿Se han definido ACLs para modelos abstractos heredados con `_name`?
+- [ ] Does every new model have at least one ACL?
+- [ ] Do TransientModel models (wizards) have ACLs for the groups that use them?
+- [ ] Are `unlink` permissions restricted to managers/admins?
+- [ ] Have ACLs been defined for inherited abstract models with `_name`?
 
 ---
 
-## 2. Grupos de seguridad
+## 2. Security Groups
 
-### Definición de grupos
+### Group Definition
 
 ```xml
 <!-- security/security.xml -->
 <odoo>
     <data noupdate="0">
 
-        <!-- Categoría (módulo) -->
+        <!-- Category (module) -->
         <record id="module_category_my_module" model="ir.module.category">
             <field name="name">My Module</field>
             <field name="sequence">100</field>
         </record>
 
-        <!-- Grupo usuario -->
+        <!-- User group -->
         <record id="group_my_module_user" model="res.groups">
             <field name="name">User</field>
             <field name="category_id" ref="module_category_my_module"/>
             <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
         </record>
 
-        <!-- Grupo manager (hereda de user) -->
+        <!-- Manager group (inherits from user) -->
         <record id="group_my_module_manager" model="res.groups">
             <field name="name">Manager</field>
             <field name="category_id" ref="module_category_my_module"/>
@@ -73,9 +73,9 @@ access_sale_order_line_manager,sale.order.line.manager,model_sale_order_line,sal
 </odoo>
 ```
 
-### Jerarquía recomendada
+### Recommended Hierarchy
 
-```
+```text
 base.group_user (Internal User)
   └── my_module.group_my_module_user
         └── my_module.group_my_module_manager
@@ -83,11 +83,11 @@ base.group_user (Internal User)
 
 ---
 
-## 3. Reglas de registro (`ir.rule`)
+## 3. Record Rules (`ir.rule`)
 
-Las reglas de registro filtran qué registros puede ver/editar cada usuario.
+Record rules filter which records each user can view/edit.
 
-### Regla de multi-compañía (la más común)
+### Multi-company Rule (most common)
 
 ```xml
 <record id="rule_my_model_company" model="ir.rule">
@@ -101,7 +101,7 @@ Las reglas de registro filtran qué registros puede ver/editar cada usuario.
 </record>
 ```
 
-### Regla por usuario
+### Per-user Rule
 
 ```xml
 <record id="rule_my_model_own" model="ir.rule">
@@ -118,19 +118,19 @@ Las reglas de registro filtran qué registros puede ver/editar cada usuario.
 </record>
 ```
 
-### Variables disponibles en `domain_force`
+### Variables available in `domain_force`
 
-| Variable | Descripción |
+| Variable | Description |
 |----------|-------------|
-| `user` | Recordset del usuario actual (`res.users`) |
-| `company_id` | ID de la compañía activa del usuario |
-| `company_ids` | IDs de todas las compañías del usuario |
-| `time` | Módulo `time` de Python |
+| `user` | Recordset of the current user (`res.users`) |
+| `company_id` | ID of the user's active company |
+| `company_ids` | IDs of all companies the user has access to |
+| `time` | Python `time` module |
 
-### Reglas `noupdate`
+### `noupdate` Rules
 
 ```xml
-<!-- Reglas que NO deben ser actualizadas al reinstalar el módulo -->
+<!-- Rules that MUST NOT be updated upon module reinstallation -->
 <data noupdate="1">
     <record id="rule_sensitive_data" model="ir.rule">
         <!-- ... -->
@@ -138,14 +138,14 @@ Las reglas de registro filtran qué registros puede ver/editar cada usuario.
 </data>
 ```
 
-> **Buena práctica**: usa `noupdate="1"` para reglas de seguridad que el
-> administrador podría personalizar después de la instalación.
+> **Best Practice**: Use `noupdate="1"` for security rules that an
+> administrator might customize after installation.
 
 ---
 
-## 4. Controladores HTTP
+## 4. HTTP Controllers
 
-### Controlador básico
+### Basic Controller
 
 ```python
 from odoo import http
@@ -161,7 +161,7 @@ class MyController(http.Controller):
         methods=["POST"],
     )
     def get_records(self, **kwargs):
-        """Endpoint JSON autenticado."""
+        """Authenticated JSON endpoint."""
         records = request.env["my.model"].search([])
         return records.read(["name", "state"])
 
@@ -172,83 +172,83 @@ class MyController(http.Controller):
         website=True,
     )
     def my_page(self, **kwargs):
-        """Página web pública."""
+        """Public web page."""
         return request.render("my_module.my_template", {
             "records": request.env["my.model"].sudo().search([]),
         })
 ```
 
-### Tipos de autenticación
+### Authentication Types
 
-| `auth` | Descripción | Cuándo usar |
+| `auth` | Description | When to use |
 |--------|-------------|-------------|
-| `user` | Usuario autenticado (sesión) | APIs internas, acciones del backend |
-| `public` | Acceso sin login (portal/website) | Páginas públicas del website |
-| `none` | Sin verificación de autenticación | Webhooks externos (verificar firma manualmente) |
+| `user` | Authenticated user (session) | Internal APIs, backend actions |
+| `public` | Access without login (portal/website) | Public website pages |
+| `none` | No authentication verification | External webhooks (verify signature manually) |
 
-### Seguridad en controladores
+### Controller Security
 
 ```python
-# ✅ Correcto: usar sudo() solo cuando es necesario y con datos validados
+# ✅ Correct: use sudo() only when necessary and with validated data
 @http.route("/api/webhook", type="json", auth="none", csrf=False)
 def webhook(self, **kwargs):
-    # Verificar firma/token antes de procesar
+    # Verify signature/token before processing
     token = request.httprequest.headers.get("X-Webhook-Token")
     if not self._verify_token(token):
         return {"error": "Unauthorized"}, 401
 
-    # Usar sudo() solo después de verificar
+    # Use sudo() only after verification
     request.env["my.model"].sudo().create(kwargs.get("data", {}))
     return {"status": "ok"}
 
-# ❌ PROHIBIDO: sudo() sin verificación
+# ❌ FORBIDDEN: sudo() without verification
 @http.route("/api/data", type="json", auth="none")
 def unsafe_endpoint(self, **kwargs):
-    return request.env["res.partner"].sudo().search_read([])  # ¡Datos expuestos!
+    return request.env["res.partner"].sudo().search_read([])  # Data exposed!
 ```
 
 ### CSRF
 
-- Los endpoints `type="http"` con `auth="user"` tienen protección CSRF activada
-  por defecto.
-- Para webhooks externos, usa `csrf=False` **solo con verificación manual de
-  tokens/firmas**.
+- Endpoints with `type="http"` and `auth="user"` have CSRF protection enabled
+  by default.
+- For external webhooks, use `csrf=False` **only with manual verification of
+  tokens/signatures**.
 
 ---
 
-## 5. `sudo()` — Buenas prácticas
+## 5. `sudo()` — Best Practices
 
 ```python
-# ✅ Correcto: sudo() acotado a la operación necesaria
+# ✅ Correct: sudo() scoped to the necessary operation
 def action_send_email(self):
     template = self.env.ref("my_module.email_template").sudo()
     template.send_mail(self.id)
 
-# ✅ Correcto: sudo() con filtrado previo
+# ✅ Correct: sudo() with prior filtering
 def _get_public_data(self):
-    # Solo exponer campos seguros
+    # Only expose safe fields
     return self.sudo().read(["name", "state"])
 
-# ❌ PROHIBIDO: sudo() para saltarse seguridad legítima
+# ❌ FORBIDDEN: sudo() to bypass legitimate security
 def action_delete_all(self):
-    self.env["res.partner"].sudo().search([]).unlink()  # ¡NUNCA!
+    self.env["res.partner"].sudo().search([]).unlink()  # NEVER!
 ```
 
-### Regla general
+### General Rule
 
-> Solo usar `sudo()` cuando la lógica de negocio lo requiere (ej. enviar
-> correos, crear registros cross-company) y **nunca** para evadir ACLs o
-> reglas de registro que protegen datos sensibles.
+> Only use `sudo()` when business logic requires it (e.g., sending
+> emails, creating cross-company records) and **never** to evade ACLs or
+> record rules protecting sensitive data.
 
 ---
 
-## 6. Checklist de seguridad
+## 6. Security Checklist
 
-- [ ] ¿Cada modelo nuevo tiene ACLs en `ir.model.access.csv`?
-- [ ] ¿Los modelos con datos sensibles tienen reglas `ir.rule`?
-- [ ] ¿Los modelos multi-compañía tienen la regla de `company_id`?
-- [ ] ¿Los controladores usan el `auth` apropiado (`user`, `public`, `none`)?
-- [ ] ¿Los endpoints `auth="none"` verifican tokens/firmas manualmente?
-- [ ] ¿`sudo()` se usa solo donde es estrictamente necesario?
-- [ ] ¿No hay SQL con concatenación de strings? (ver `python-conventions.md`)
-- [ ] ¿Los campos sensibles están protegidos con `groups="base.group_system"`?
+- [ ] Does every new model have ACLs in `ir.model.access.csv`?
+- [ ] Do models with sensitive data have `ir.rule` rules?
+- [ ] Do multi-company models have the `company_id` rule?
+- [ ] Do controllers use the appropriate `auth` (`user`, `public`, `none`)?
+- [ ] Do `auth="none"` endpoints verify tokens/signatures manually?
+- [ ] Is `sudo()` used only where strictly necessary?
+- [ ] Are there no SQL queries using string concatenation? (see `python-conventions.md`)
+- [ ] Are sensitive fields protected with `groups="base.group_system"`?

@@ -1,34 +1,34 @@
 # E-commerce Connectors — Odoo OCA Development
 
-Patrones de diseño para conectores de e-commerce sobre Odoo (16.0–19.0).
-Cubre Amazon, eBay, WooCommerce, Mirakl y Temu.
+Design patterns for e-commerce connectors on Odoo (16.0–19.0).
+Covers Amazon, eBay, WooCommerce, Mirakl, and Temu.
 
-> **Nota**: los patrones de arquitectura son **agnósticos de la versión de Odoo**,
-> salvo por la sintaxis de vistas de configuración (`<tree>` en 16/17 vs `<list>`
-> en 18/19). Consulta `references/xml-conventions.md` para el tag correcto.
+> **Note**: the architecture patterns are **agnostic of the Odoo version**,
+> except for the configuration view syntax (`<tree>` in 16/17 vs `<list>`
+> in 18/19). See `references/xml-conventions.md` for the correct tag.
 
 ---
 
-## 1. Arquitectura general de un conector
+## 1. General Connector Architecture
 
-```
+```text
 my_connector/
 ├── __manifest__.py
 ├── models/
 │   ├── __init__.py
-│   ├── connector_backend.py       # Configuración de la conexión
-│   ├── connector_binding.py       # Mapping local ↔ marketplace
-│   ├── product_mapping.py         # Mapping de productos
-│   ├── order_mapping.py           # Mapping de pedidos
-│   └── stock_sync.py              # Sincronización de stock
+│   ├── connector_backend.py       # Connection configuration
+│   ├── connector_binding.py       # Local ↔ marketplace mapping
+│   ├── product_mapping.py         # Product mapping
+│   ├── order_mapping.py           # Order mapping
+│   └── stock_sync.py              # Stock synchronization
 ├── views/
 │   ├── connector_backend_views.xml
 │   └── binding_views.xml
 ├── data/
-│   ├── cron.xml                   # Crons de sincronización
-│   └── queue_job_channel.xml      # Canales de cola
+│   ├── cron.xml                   # Synchronization crons
+│   └── queue_job_channel.xml      # Queue channels
 ├── wizards/
-│   └── sync_wizard.py             # Wizard de sincronización manual
+│   └── sync_wizard.py             # Manual synchronization wizard
 ├── security/
 │   ├── ir.model.access.csv
 │   └── security.xml
@@ -40,7 +40,7 @@ my_connector/
 
 ---
 
-## 2. Modelo de backend (configuración)
+## 2. Backend Model (Configuration)
 
 ```python
 from odoo import api, fields, models, _
@@ -56,7 +56,7 @@ class ConnectorBackend(models.Model):
     _description = "E-commerce Connector Backend"
     _inherit = ["mail.thread"]
 
-    # --- Atributos de configuración ---
+    # --- Configuration Attributes ---
     name = fields.Char(string="Name", required=True)
     marketplace = fields.Selection(
         selection=[
@@ -79,7 +79,7 @@ class ConnectorBackend(models.Model):
         tracking=True,
     )
 
-    # --- Credenciales (encriptadas) ---
+    # --- Credentials (encrypted) ---
     api_key = fields.Char(string="API Key", groups="base.group_system")
     api_secret = fields.Char(string="API Secret", groups="base.group_system")
     api_url = fields.Char(string="API URL")
@@ -91,7 +91,7 @@ class ConnectorBackend(models.Model):
         default="sandbox",
     )
 
-    # --- Configuración de sincronización ---
+    # --- Sync Configuration ---
     sync_products = fields.Boolean(default=True)
     sync_orders = fields.Boolean(default=True)
     sync_stock = fields.Boolean(default=True)
@@ -114,9 +114,9 @@ class ConnectorBackend(models.Model):
         default=10000,
     )
 
-    # --- Acciones ---
+    # --- Actions ---
     def action_test_connection(self):
-        """Probar conexión con el marketplace."""
+        """Test connection with the marketplace."""
         self.ensure_one()
         try:
             adapter = self._get_adapter()
@@ -139,7 +139,7 @@ class ConnectorBackend(models.Model):
             ) from e
 
     def _get_adapter(self):
-        """Retorna el adaptador específico del marketplace."""
+        """Returns the marketplace specific adapter."""
         self.ensure_one()
         adapter_map = {
             "amazon": "connector.adapter.amazon",
@@ -158,9 +158,9 @@ class ConnectorBackend(models.Model):
 
 ---
 
-## 3. Modelo de binding (mapping)
+## 3. Binding Model (Mapping)
 
-El binding conecta un registro local de Odoo con su contraparte en el marketplace.
+The binding connects a local Odoo record with its counterpart in the marketplace.
 
 ```python
 class ConnectorBinding(models.Model):
@@ -177,7 +177,7 @@ class ConnectorBinding(models.Model):
     external_id = fields.Char(
         string="External ID",
         index=True,
-        help="ID del registro en el marketplace.",
+        help="Record ID in the marketplace.",
     )
     sync_state = fields.Selection(
         selection=[
@@ -190,7 +190,7 @@ class ConnectorBinding(models.Model):
     sync_date = fields.Datetime(string="Last Sync Date")
     sync_error = fields.Text(string="Last Sync Error")
 
-    # --- Ejemplo: binding de producto ---
+    # --- Example: product binding ---
     product_id = fields.Many2one(
         "product.product",
         string="Product",
@@ -206,7 +206,7 @@ class ConnectorBinding(models.Model):
     ]
 
     def action_retry_sync(self):
-        """Reintentar sincronización."""
+        """Retry synchronization."""
         for binding in self:
             binding.sync_state = "pending"
             binding.sync_error = False
@@ -214,12 +214,12 @@ class ConnectorBinding(models.Model):
 
 ---
 
-## 4. Colas de trabajo (`queue_job`)
+## 4. Work Queues (`queue_job`)
 
-Usa el módulo OCA [`queue_job`](https://github.com/OCA/queue/) para procesar
-sincronizaciones en segundo plano.
+Use the OCA module [`queue_job`](https://github.com/OCA/queue/) to process
+synchronizations in the background.
 
-### Dependencia en manifest
+### Manifest Dependency
 
 ```python
 {
@@ -230,7 +230,7 @@ sincronizaciones en segundo plano.
 }
 ```
 
-### Canal de cola
+### Queue Channel
 
 ```xml
 <!-- data/queue_job_channel.xml -->
@@ -241,7 +241,7 @@ sincronizaciones en segundo plano.
             <field name="parent_id" ref="queue_job.channel_root"/>
         </record>
 
-        <!-- Sub-canales por marketplace (para rate-limiting independiente) -->
+        <!-- Sub-channels per marketplace (for independent rate-limiting) -->
         <record id="channel_connector_amazon" model="queue.job.channel">
             <field name="name">connector.amazon</field>
             <field name="parent_id" ref="channel_connector"/>
@@ -255,7 +255,7 @@ sincronizaciones en segundo plano.
 </odoo>
 ```
 
-### Uso de `queue_job` en código
+### Using `queue_job` in Code
 
 ```python
 from odoo.addons.queue_job.job import job
@@ -266,7 +266,7 @@ class ConnectorBinding(models.Model):
 
     @job(default_channel="root.connector.amazon")
     def job_import_product(self, backend_id, external_id):
-        """Job en cola: importar producto desde marketplace."""
+        """Queued job: import product from marketplace."""
         backend = self.env["connector.backend"].browse(backend_id)
         adapter = backend._get_adapter()
 
@@ -282,10 +282,10 @@ class ConnectorBinding(models.Model):
                 "Failed to import product %s from %s: %s",
                 external_id, backend.name, e,
             )
-            raise  # queue_job reintentará
-
+            raise  # queue_job will retry
+        
     def _import_product_data(self, external_data):
-        """Mapear datos externos a campos de Odoo."""
+        """Map external data to Odoo fields."""
         self.ensure_one()
         vals = {
             "name": external_data.get("title"),
@@ -302,44 +302,44 @@ class ConnectorBinding(models.Model):
 
 ---
 
-## 5. Logs de sincronización
+## 5. Sync Logs
 
-Crear un modelo `connector.sync.log` con campos: `backend_id` (M2O),
+Create a `connector.sync.log` model with fields: `backend_id` (M2O),
 `operation` (import/export), `model_name`, `external_id`, `state`
-(success/error/skipped), `message` (Text) y `duration_seconds` (Float).
-Ordenar por `create_date desc` para ver los logs más recientes primero.
+(success/error/skipped), `message` (Text) and `duration_seconds` (Float).
+Sort by `create_date desc` to view the most recent logs first.
 
 ---
 
 ## 6. Rate-limiting
 
-### Patrón de rate-limiter
+### Rate-limiter Pattern
 
-Implementar un rate-limiter con ventana deslizante (`deque`) por minuto y por día.
-Usar un `Lock` para thread-safety. La lógica: antes de cada request, limpiar
-timestamps antiguos de la ventana, esperar si se excede el límite por minuto, y
-lanzar excepción si se excede el límite diario.
+Implement a rate-limiter with a sliding window (`deque`) per minute and per day.
+Use a `Lock` for thread-safety. The logic: before each request, clear old
+timestamps from the window, wait if the per-minute limit is exceeded, and raise
+an exception if the daily limit is exceeded.
 
 ```python
-# Uso en el adaptador:
+# Usage in the adapter:
 rate_limiter = RateLimiter(max_per_minute=60, max_per_day=10000)
-rate_limiter.acquire()  # Espera si es necesario
+rate_limiter.acquire()  # Waits if necessary
 response = requests.get(url, headers=headers)
 ```
 
-### Límites por marketplace
+### Limits by Marketplace
 
-| Marketplace | Requests/min | Requests/día | Notas |
+| Marketplace | Requests/min | Requests/day | Notes |
 |------------|-------------|-------------|-------|
-| **Amazon SP-API** | 30–60 (varía por endpoint) | ~36,000 | Burst allowance; throttling con retry-after |
-| **eBay** | 5,000/día por app | 5,000 | OAuth2; rate headers en respuesta |
-| **WooCommerce** | Sin límite oficial | Sin límite | Depende del hosting; recomendado 30/min |
-| **Mirakl** | 60 | ~50,000 | API key; headers `X-RateLimit-*` |
-| **Temu** | 50 | ~10,000 | Token-based; reintentar con backoff |
+| **Amazon SP-API** | 30–60 (varies by endpoint) | ~36,000 | Burst allowance; throttling with retry-after |
+| **eBay** | 5,000/day per app | 5,000 | OAuth2; rate headers in response |
+| **WooCommerce** | No official limit | No limit | Depends on hosting; 30/min recommended |
+| **Mirakl** | 60 | ~50,000 | API key; `X-RateLimit-*` headers |
+| **Temu** | 50 | ~10,000 | Token-based; retry with backoff |
 
 ---
 
-## 7. Cron de sincronización
+## 7. Synchronization Cron
 
 ```xml
 <!-- data/cron.xml -->
@@ -359,7 +359,7 @@ response = requests.get(url, headers=headers)
 </odoo>
 ```
 
-### Implementación del cron
+### Cron Implementation
 
 ```python
 class ConnectorBackend(models.Model):
@@ -367,7 +367,7 @@ class ConnectorBackend(models.Model):
 
     @api.model
     def _cron_sync_products(self):
-        """Cron: sincronizar productos de todos los backends activos."""
+        """Cron: sync products from all active backends."""
         backends = self.search([
             ("state", "=", "connected"),
             ("sync_products", "=", True),
@@ -382,17 +382,17 @@ class ConnectorBackend(models.Model):
                     backend.name, e,
                 )
                 backend.state = "error"
-                # No re-lanzar: permitir que otros backends se sincronicen
+                # Do not re-raise: allow other backends to sync
 ```
 
 ---
 
-## 8. Patrones específicos por marketplace
+## 8. Specific Patterns by Marketplace
 
-| Marketplace | Autenticación | Endpoints clave | Precauciones |
-|------------|---------------|-----------------|-------------|
-| **Amazon SP-API** | OAuth2 + IAM role + refresh token | `getOrders`, `getListingsItem`, `submitFeed` | Feeds de stock/precios son asincrónicos (submit → poll) |
-| **eBay** | OAuth2 (user token + app token) | `getOrders`, `createOrUpdateInventoryItem` | Categorías y políticas cambian frecuentemente |
-| **WooCommerce** | Consumer key/secret (REST API keys) | `/wp-json/wc/v3/*` + webhooks | Paginación vía headers `X-WP-Total`/`X-WP-TotalPages` |
-| **Mirakl** | API key en header | `offers`, `orders`, `messages` | Estados de orden no mapean 1:1 con Odoo |
-| **Temu** | Token-based con firma de request | Productos, pedidos, logística | Documentación limitada, API en evolución rápida; logging exhaustivo recomendado |
+| Marketplace | Authentication | Key Endpoints | Precautions |
+|------------|---------------|---------------|-------------|
+| **Amazon SP-API** | OAuth2 + IAM role + refresh token | `getOrders`, `getListingsItem`, `submitFeed` | Stock/price feeds are asynchronous (submit → poll) |
+| **eBay** | OAuth2 (user token + app token) | `getOrders`, `createOrUpdateInventoryItem` | Categories and policies change frequently |
+| **WooCommerce** | Consumer key/secret (REST API keys) | `/wp-json/wc/v3/*` + webhooks | Pagination via `X-WP-Total`/`X-WP-TotalPages` headers |
+| **Mirakl** | API key in header | `offers`, `orders`, `messages` | Order statuses do not map 1:1 with Odoo |
+| **Temu** | Token-based with request signing | Products, orders, logistics | Limited docs, rapidly evolving API; exhaustive logging recommended |

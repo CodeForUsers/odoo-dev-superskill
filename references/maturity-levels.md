@@ -1,32 +1,32 @@
 # Maturity Levels — Odoo OCA Development
 
-Niveles de madurez para módulos Odoo según los estándares OCA.
-Estos niveles son **idénticos para las 4 versiones** (16.0–19.0).
+Maturity levels for Odoo modules according to OCA standards.
+These levels are **identical for all 4 versions** (16.0–19.0).
 
 ---
 
-## Niveles de madurez
+## Maturity Levels
 
-| Nivel | Badge | Significado |
-|-------|-------|-------------|
-| **Alpha** | `Alpha` | En desarrollo activo, no apto para producción |
-| **Beta** | `Beta` | Funcional pero puede tener bugs, apto para testing |
-| **Production/Stable** | `Production/Stable` | Probado y estable, apto para producción |
-| **Mature** | `Mature` | Estable durante varias versiones, ampliamente adoptado |
+| Level | Badge | Meaning |
+|-------|-------|---------|
+| **Alpha** | `Alpha` | In active development, not suitable for production |
+| **Beta** | `Beta` | Functional but may have bugs, suitable for testing |
+| **Production/Stable** | `Production/Stable` | Tested and stable, suitable for production |
+| **Mature** | `Mature` | Stable across multiple versions, widely adopted |
 
 ---
 
-## Checklist por nivel
+## Checklist by Level
 
 ### Alpha
 
-Requisitos mínimos para declarar un módulo como Alpha:
+Minimum requirements to declare a module as Alpha:
 
-- [x] El módulo se instala sin errores.
-- [x] El manifest (`__manifest__.py`) contiene todos los campos obligatorios.
-- [x] Los modelos tienen ACLs básicas (`ir.model.access.csv`).
-- [ ] No se requieren tests.
-- [ ] No se requiere documentación completa.
+- [x] The module installs without errors.
+- [x] The manifest (`__manifest__.py`) contains all mandatory fields.
+- [x] Models have basic ACLs (`ir.model.access.csv`).
+- [ ] No tests required.
+- [ ] No comprehensive documentation required.
 
 ```python
 # __manifest__.py
@@ -38,15 +38,15 @@ Requisitos mínimos para declarar un módulo como Alpha:
 
 ### Beta
 
-Requisitos para declarar un módulo como Beta (incluye todo lo de Alpha):
+Requirements to declare a module as Beta (includes everything from Alpha):
 
-- [x] Todo lo de Alpha.
-- [x] Existe al menos un test por modelo (`TransactionCase` con CRUD básico).
-- [x] Las vistas principales funcionan (formulario, lista, búsqueda).
-- [x] Existe documentación básica (`README.rst` o carpeta `readme/`).
-- [x] Los campos computados tienen tests.
-- [x] Las constrains tienen tests que verifican excepciones.
-- [ ] No se requiere documentación exhaustiva.
+- [x] Everything from Alpha.
+- [x] There is at least one test per model (`TransactionCase` with basic CRUD).
+- [x] Main views work (form, list, search).
+- [x] Basic documentation exists (`README.rst` or `readme/` folder).
+- [x] Computed fields have tests.
+- [x] Constraints have tests verifying exceptions.
+- [ ] Exhaustive documentation is not required.
 
 ```python
 # __manifest__.py
@@ -58,20 +58,20 @@ Requisitos para declarar un módulo como Beta (incluye todo lo de Alpha):
 
 ### Production/Stable
 
-Requisitos para declarar un módulo como Stable (incluye todo lo de Beta):
+Requirements to declare a module as Stable (includes everything from Beta):
 
-- [x] Todo lo de Beta.
-- [x] Cobertura de tests adecuada (CRUD, compute, constrains, workflows).
-- [x] Documentación completa con estructura OCA:
-  - `DESCRIPTION.rst`: descripción funcional.
-  - `CONFIGURE.rst`: instrucciones de configuración.
-  - `USAGE.rst`: guía de uso con capturas de pantalla.
-  - `CONTRIBUTORS.rst`: lista de contribuidores.
-- [x] Tests de workflows/transiciones de estado.
-- [x] Tests de seguridad (verificar acceso por grupo).
-- [x] Reglas de registro (`ir.rule`) para multi-compañía si aplica.
-- [x] Sin warnings de deprecación en logs al ejecutar tests.
-- [x] Código revisado por al menos un desarrollador.
+- [x] Everything from Beta.
+- [x] Adequate test coverage (CRUD, compute, constrains, workflows).
+- [x] Comprehensive documentation with OCA structure:
+  - `DESCRIPTION.rst`: functional description.
+  - `CONFIGURE.rst`: configuration instructions.
+  - `USAGE.rst`: usage guide with screenshots.
+  - `CONTRIBUTORS.rst`: list of contributors.
+- [x] State transition / workflow tests.
+- [x] Security tests (verify group access).
+- [x] Record rules (`ir.rule`) for multi-company if applicable.
+- [x] No deprecation warnings in logs when running tests.
+- [x] Code reviewed by at least one developer.
 
 ```python
 # __manifest__.py
@@ -83,16 +83,16 @@ Requisitos para declarar un módulo como Stable (incluye todo lo de Beta):
 
 ### Mature
 
-Requisitos para declarar un módulo como Mature (incluye todo lo de Stable):
+Requirements to declare a module as Mature (includes everything from Stable):
 
-- [x] Todo lo de Production/Stable.
-- [x] El módulo ha sido estable durante **al menos 2 versiones** de Odoo
-  (ej. funcional en 16.0 y 17.0 sin bugs críticos reportados).
-- [x] Ampliamente adoptado por la comunidad (múltiples instalaciones en producción).
-- [x] Historial limpio de issues: bugs críticos resueltos en menos de 30 días.
-- [x] Cobertura de tests > 80%.
-- [x] Documentación completa y actualizada, incluyendo changelog.
-- [x] Tests de rendimiento si el módulo maneja grandes volúmenes de datos.
+- [x] Everything from Production/Stable.
+- [x] The module has been stable for **at least 2 Odoo versions**
+  (e.g., functional in 16.0 and 17.0 without reported critical bugs).
+- [x] Widely adopted by the community (multiple production installations).
+- [x] Clean issue history: critical bugs resolved in under 30 days.
+- [x] Test coverage > 80%.
+- [x] Comprehensive and updated documentation, including changelog.
+- [x] Performance tests if the module handles large data volumes.
 
 ```python
 # __manifest__.py
@@ -104,9 +104,9 @@ Requisitos para declarar un módulo como Mature (incluye todo lo de Stable):
 
 ---
 
-## Cómo declarar el nivel de madurez
+## How to Declare Maturity Level
 
-### En el manifest
+### In the Manifest
 
 ```python
 # __manifest__.py
@@ -118,9 +118,9 @@ Requisitos para declarar un módulo como Mature (incluye todo lo de Stable):
 }
 ```
 
-### En el README (badge)
+### In the README (Badge)
 
-Usa un badge en el README para indicar el nivel:
+Use a badge in the README to indicate the level:
 
 ```rst
 .. |badge_status| image:: https://img.shields.io/badge/maturity-Beta-yellow.svg
@@ -128,10 +128,10 @@ Usa un badge en el README para indicar el nivel:
     :alt: Beta
 ```
 
-### Valores válidos para `development_status`
+### Valid values for `development_status`
 
 ```python
-# Valores aceptados por la OCA:
+# Accepted values by OCA:
 "Alpha"
 "Beta"
 "Production/Stable"
@@ -140,41 +140,41 @@ Usa un badge en el README para indicar el nivel:
 
 ---
 
-## Flujo de progresión
+## Progression Flow
 
-```
+```text
 Alpha  →  Beta  →  Production/Stable  →  Mature
   │         │              │                  │
-  │         │              │                  └─ 2+ versiones estable
-  │         │              └─ Tests completos + docs + review
-  │         └─ Tests básicos + docs mínimas
-  └─ Se instala + ACLs
+  │         │              │                  └─ 2+ stable versions
+  │         │              └─ Full tests + docs + review
+  │         └─ Basic tests + minimal docs
+  └─ Installs + ACLs
 ```
 
-### Cuándo promocionar
+### When to Promote
 
-| De → A | Condición |
-|--------|-----------|
-| Alpha → Beta | Tests CRUD pasan, documentación básica existe |
-| Beta → Stable | Tests completos, documentación OCA completa, code review |
-| Stable → Mature | 2+ versiones sin bugs críticos, amplia adopción |
+| From → To | Condition |
+|-----------|-----------|
+| Alpha → Beta | CRUD tests pass, basic documentation exists |
+| Beta → Stable | Full tests, complete OCA documentation, code review |
+| Stable → Mature | 2+ versions without critical bugs, wide adoption |
 
-### Cuándo degradar
+### When to Demote
 
-| De → A | Condición |
-|--------|-----------|
-| Stable → Beta | Bug crítico en producción no resuelto en 30 días |
-| Mature → Stable | Refactorización mayor que cambia la API |
-| Cualquiera → Alpha | Reescritura completa del módulo |
+| From → To | Condition |
+|-----------|-----------|
+| Stable → Beta | Critical production bug unresolved for 30 days |
+| Mature → Stable | Major refactoring changing the API |
+| Any → Alpha | Complete module rewrite |
 
 ---
 
-## Checklist rápido de validación
+## Quick Validation Checklist
 
-Antes de declarar cualquier nivel, verifica:
+Before declaring any level, verify:
 
-- [ ] ¿`development_status` está definido en el manifest?
-- [ ] ¿El nivel declarado coincide con la realidad del módulo?
-- [ ] ¿Los tests pasan al 100%?
-- [ ] ¿La documentación es proporcional al nivel declarado?
-- [ ] ¿No hay warnings de deprecación si el nivel es Stable o superior?
+- [ ] Is `development_status` defined in the manifest?
+- [ ] Does the declared level match the module's reality?
+- [ ] Do tests pass 100%?
+- [ ] Is the documentation proportional to the declared level?
+- [ ] Are there no deprecation warnings if the level is Stable or higher?

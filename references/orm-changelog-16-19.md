@@ -1,41 +1,41 @@
-# ORM Changelog — Odoo 16.0 a 19.0
+# ORM Changelog — Odoo 16.0 to 19.0
 
-Changelog detallado de los cambios en el ORM de Odoo entre las versiones 16.0 y 19.0.
+Detailed changelog of Odoo ORM changes between versions 16.0 and 19.0.
 
 ---
 
-## Resumen de métodos deprecados y reemplazos
+## Summary of Deprecated Methods and Replacements
 
-| Método / Patrón | 16.0 | 17.0 | 18.0 | 19.0 | Reemplazo |
-|-----------------|------|------|------|------|-----------|
-| `name_get()` | ✅ Estándar | ⚠️ Deprecado | ⚠️ Deprecado | ❌ Eliminado | `_compute_display_name` |
-| `read_group()` | ✅ Estándar | ✅ Estándar | ⚠️ Deprecado | ❌ Eliminado | `_read_group()` / `formatted_read_group()` |
-| `name_search()` | ✅ Estándar | ✅ Estándar | ✅ Estándar | ⚠️ Deprecado | `_search_display_name` |
-| `cr.execute` + concat | ❌ Prohibido | ❌ Prohibido | ❌ Prohibido | ❌ Prohibido | `cr.execute(q, params)` o `SQL()` |
-| `SQL()` wrapper | ❌ No existe | ✅ Nuevo | ✅ Estándar | ✅ Estándar | — |
-| `record._cr` | ✅ Funcional | ✅ Funcional | ✅ Funcional | ⚠️ Deprecado | `self.env.cr` |
-| `record._uid` | ✅ Funcional | ✅ Funcional | ✅ Funcional | ⚠️ Deprecado | `self.env.uid` |
-| `record._context` | ✅ Funcional | ✅ Funcional | ✅ Funcional | ⚠️ Deprecado | `self.env.context` |
-| `odoo.osv` | ✅ Funcional | ✅ Funcional | ✅ Funcional | ⚠️ Deprecado | Módulos específicos |
-| `attrs` en XML | ✅ Funcional | ⚠️ Deprecado | ⚠️ Deprecado | ❌ Eliminado | Atributos directos (`invisible`, `readonly`) |
+| Method / Pattern | 16.0 | 17.0 | 18.0 | 19.0 | Replacement |
+|------------------|------|------|------|------|-------------|
+| `name_get()` | ✅ Standard | ⚠️ Deprecated | ⚠️ Deprecated | ❌ Removed | `_compute_display_name` |
+| `read_group()` | ✅ Standard | ✅ Standard | ⚠️ Deprecated | ❌ Removed | `_read_group()` / `formatted_read_group()` |
+| `name_search()` | ✅ Standard | ✅ Standard | ✅ Standard | ⚠️ Deprecated | `_search_display_name` |
+| `cr.execute` + concat | ❌ Forbidden | ❌ Forbidden | ❌ Forbidden | ❌ Forbidden | `cr.execute(q, params)` or `SQL()` |
+| `SQL()` wrapper | ❌ N/A | ✅ New | ✅ Standard | ✅ Standard | — |
+| `record._cr` | ✅ Functional | ✅ Functional | ✅ Functional | ⚠️ Deprecated | `self.env.cr` |
+| `record._uid` | ✅ Functional | ✅ Functional | ✅ Functional | ⚠️ Deprecated | `self.env.uid` |
+| `record._context` | ✅ Functional | ✅ Functional | ✅ Functional | ⚠️ Deprecated | `self.env.context` |
+| `odoo.osv` | ✅ Functional | ✅ Functional | ✅ Functional | ⚠️ Deprecated | Specific modules |
+| `attrs` in XML | ✅ Functional | ⚠️ Deprecated | ⚠️ Deprecated | ❌ Removed | Direct attributes (`invisible`, `readonly`) |
 
 ---
 
 ## Odoo 16.0
 
-### Cambios principales del ORM
+### Main ORM Changes
 
-#### Mejoras en `_read_group`
-- El método interno `_read_group` recibe mejoras para traducción de campos y
-  agrupaciones con JSONB en ciertos backends.
-- El método público sigue siendo `read_group()`.
+#### `_read_group` Improvements
+- The internal `_read_group` method receives improvements for field translation and
+  grouping with JSONB on certain backends.
+- The public method remains `read_group()`.
 
-#### Traducción de campos con JSONB
-- En algunos escenarios, Odoo 16.0 empieza a usar columnas JSONB para
-  almacenar traducciones de campos, en lugar de la tabla `ir_translation`.
+#### Field Translation with JSONB
+- In some scenarios, Odoo 16.0 starts using JSONB columns to
+  store field translations instead of the `ir_translation` table.
 
 ```python
-# 16.0: read_group es el estándar público
+# 16.0: read_group is the public standard
 results = self.env["sale.order"].read_group(
     domain=[("state", "=", "sale")],
     fields=["partner_id", "amount_total:sum"],
@@ -50,8 +50,8 @@ for group in results:
 ```
 
 #### `api.model_create_multi`
-- Ya disponible y recomendado para sobreescribir `create()` recibiendo
-  una lista de diccionarios.
+- Available and recommended for overriding `create()` by receiving
+  a list of dictionaries.
 
 ```python
 @api.model_create_multi
@@ -66,15 +66,15 @@ def create(self, vals_list):
 
 ## Odoo 17.0
 
-### Wrapper `SQL()` para composición segura
+### `SQL()` Wrapper for Safe Composition
 
-El cambio más significativo del ORM en 17.0. Permite componer queries SQL de
-forma segura, evitando inyección por concatenación de strings.
+The most significant ORM change in 17.0. It allows safe SQL query composition,
+preventing injection via string concatenation.
 
 ```python
 from odoo.tools import SQL
 
-# Composición segura
+# Safe composition
 table = SQL.identifier(self._table)
 query = SQL(
     "SELECT id, name FROM %s WHERE active = %s AND company_id = %s",
@@ -84,7 +84,7 @@ query = SQL(
 )
 self.env.cr.execute(query)
 
-# Composición de fragmentos
+# Fragment composition
 select = SQL("SELECT id, name FROM %s", table)
 where = SQL("WHERE state IN %s", tuple(["draft", "confirmed"]))
 order = SQL("ORDER BY create_date DESC")
@@ -92,13 +92,13 @@ full_query = SQL("%s %s %s", select, where, order)
 self.env.cr.execute(full_query)
 ```
 
-### Deprecación de `name_get()`
+### `name_get()` Deprecation
 
-`name_get()` empieza a generar warnings en logs. El reemplazo es el campo
-computado `display_name`:
+`name_get()` starts generating warnings in logs. The replacement is the
+computed field `display_name`:
 
 ```python
-# ✅ 17.0+: campo computado
+# ✅ 17.0+: computed field
 display_name = fields.Char(compute="_compute_display_name")
 
 @api.depends("code", "name")
@@ -107,10 +107,10 @@ def _compute_display_name(self):
         rec.display_name = f"[{rec.code}] {rec.name}"
 ```
 
-### Mejoras en `with_context` y `with_company`
+### `with_context` and `with_company` Improvements
 
 ```python
-# Forma más limpia de cambiar contexto
+# Cleaner way to change context
 records = self.with_context(active_test=False).search([])
 records_company = self.with_company(company).search([])
 ```
@@ -119,28 +119,28 @@ records_company = self.with_company(company).search([])
 
 ## Odoo 18.0
 
-### Deprecación de `read_group()`
+### `read_group()` Deprecation
 
-El método público `read_group()` se deprecia. Los reemplazos son:
+The public method `read_group()` is deprecated. The replacements are:
 
 ```python
-# ❌ Deprecado en 18.0
+# ❌ Deprecated in 18.0
 results = self.env["sale.order"].read_group(
     domain=[("state", "=", "sale")],
     fields=["amount_total:sum"],
     groupby=["partner_id"],
 )
 
-# ✅ Uso interno: _read_group
-# Nota: la firma cambia — groupby y aggregates son argumentos separados
+# ✅ Internal use: _read_group
+# Note: the signature changes — groupby and aggregates are separate arguments
 results = self.env["sale.order"]._read_group(
     domain=[("state", "=", "sale")],
     groupby=["partner_id"],
     aggregates=["amount_total:sum"],
 )
-# Retorna lista de tuplas: [(partner, sum_amount_total), ...]
+# Returns a list of tuples: [(partner, sum_amount_total), ...]
 
-# ✅ API pública: formatted_read_group
+# ✅ Public API: formatted_read_group
 results = self.env["sale.order"].formatted_read_group(
     domain=[("state", "=", "sale")],
     groupby=["partner_id"],
@@ -148,34 +148,34 @@ results = self.env["sale.order"].formatted_read_group(
 )
 ```
 
-### Cambios en la firma de `_read_group`
+### `_read_group` Signature Changes
 
-La firma de `_read_group` en 18.0 es significativamente diferente de
-versiones anteriores:
+The `_read_group` signature in 18.0 is significantly different from
+previous versions:
 
 ```python
-# 18.0: nueva firma
+# 18.0: new signature
 Model._read_group(
-    domain,                  # lista de dominios
-    groupby=["field1"],      # lista de campos para agrupar
-    aggregates=["field2:agg"], # lista de "campo:agregación"
-    having=[],               # condiciones HAVING opcionales
+    domain,                  # list of domains
+    groupby=["field1"],      # list of fields to group by
+    aggregates=["field2:agg"], # list of "field:aggregation"
+    having=[],               # optional HAVING conditions
     offset=0,
     limit=None,
     order=None,
 )
-# Retorna: [(group_value_1, agg_value_1), ...]
+# Returns: [(group_value_1, agg_value_1), ...]
 ```
 
-### Mejoras en campos computados
+### Computed Fields Improvements
 
 ```python
-# 18.0: mejor soporte para flush y prefetch en campos computados
-# Los campos compute+store se recalculan más eficientemente
+# 18.0: better support for flush and prefetch in computed fields
+# Compute+store fields are recalculated more efficiently
 price_total = fields.Float(
     compute="_compute_price_total",
     store=True,
-    precompute=True,  # Se calcula antes del INSERT
+    precompute=True,  # Calculated before INSERT
 )
 ```
 
@@ -183,12 +183,12 @@ price_total = fields.Float(
 
 ## Odoo 19.0
 
-### `GROUPING SETS` para vistas pivote
+### `GROUPING SETS` for Pivot Views
 
 ```python
-# 19.0: soporte nativo de GROUPING SETS
-# Permite múltiples niveles de agrupación en una sola query
-# Usado internamente por las vistas pivote para mayor rendimiento
+# 19.0: native GROUPING SETS support
+# Allows multiple grouping levels in a single query
+# Used internally by pivot views for better performance
 results = self.env["sale.order"]._read_group(
     domain=[("state", "=", "sale")],
     groupby=["partner_id", "date_order:month"],
@@ -198,13 +198,13 @@ results = self.env["sale.order"]._read_group(
 
 ### `_search_display_name`
 
-Nuevo método que reemplaza `name_search()` como implementación estándar
-para búsquedas por nombre:
+New method replacing `name_search()` as the standard implementation
+for name-based searches:
 
 ```python
 @api.model
 def _search_display_name(self, operator, value):
-    """Búsqueda personalizada: por nombre O código."""
+    """Custom search: by name OR code."""
     return [
         "|",
         ("name", operator, value),
@@ -212,76 +212,76 @@ def _search_display_name(self, operator, value):
     ]
 ```
 
-### Fechas dinámicas en dominios
+### Dynamic Dates in Domains
 
 ```python
-# 19.0: expresiones de fecha nativas en dominios
+# 19.0: native date expressions in domains
 domain = [
     ("date_order", ">=", "context_today() - relativedelta(months=3)"),
 ]
 ```
 
-### Deprecaciones de accesores directos
+### Direct Accessor Deprecations
 
 ```python
-# ❌ Deprecado en 19.0
+# ❌ Deprecated in 19.0
 self._cr.execute(query)
 uid = self._uid
 ctx = self._context
 
-# ✅ Correcto en 19.0
+# ✅ Correct in 19.0
 self.env.cr.execute(query)
 uid = self.env.uid
 ctx = self.env.context
 ```
 
-### Dominios personalizados con SQL
+### Custom Domains with SQL
 
 ```python
-# 19.0: inyección SQL controlada en dominios (usar con extremo cuidado)
-# Siempre documentar el motivo de uso
+# 19.0: controlled SQL injection in domains (use with extreme caution)
+# Always document the reason for usage
 from odoo.osv.expression import DOMAIN_OPERATORS
 
-# Solo para casos donde los dominios estándar no son suficientes
-# Ejemplo: búsqueda full-text con tsvector
+# Only for cases where standard domains are insufficient
+# Example: full-text search with tsvector
 ```
 
-> **⚠️ Precaución**: esta funcionalidad es poderosa pero peligrosa. Solo usarla
-> cuando los dominios estándar de Odoo sean insuficientes, y siempre documentar
-> exhaustivamente el motivo.
+> **⚠️ Caution**: This feature is powerful but dangerous. Only use it
+> when standard Odoo domains are insufficient, and always thoroughly
+> document the reason.
 
 ---
 
-## Patrones comunes válidos en todas las versiones
+## Common Patterns Valid Across All Versions
 
-### Herencia de modelos
+### Model Inheritance
 
 ```python
-# Herencia por extensión (la más común)
+# Extension inheritance (most common)
 class ResPartner(models.Model):
     _inherit = "res.partner"
 
     custom_field = fields.Char(string="Custom Field")
 
-# Herencia por delegación
+# Delegation inheritance
 class ProductProduct(models.Model):
     _name = "product.product"
     _inherits = {"product.template": "product_tmpl_id"}
 
-# Herencia abstracta
+# Abstract inheritance
 class MailThread(models.AbstractModel):
     _name = "mail.thread"
     _description = "Mail Thread"
 ```
 
-### Decoradores de API
+### API Decorators
 
 ```python
-# Válidos en 16.0–19.0
-@api.depends("field1", "field2")      # Para campos computados
-@api.constrains("field1")              # Validaciones
-@api.onchange("field1")                # Cambios en UI
-@api.model                             # Métodos de clase
-@api.model_create_multi                # Override de create()
-@api.returns("self", lambda rec: rec.id)  # Tipo de retorno
+# Valid in 16.0–19.0
+@api.depends("field1", "field2")          # For computed fields
+@api.constrains("field1")                 # Validations
+@api.onchange("field1")                   # UI changes
+@api.model                                # Class methods
+@api.model_create_multi                   # create() override
+@api.returns("self", lambda rec: rec.id)  # Return type
 ```

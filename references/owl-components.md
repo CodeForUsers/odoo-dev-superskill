@@ -1,14 +1,14 @@
-# Componentes OWL 2 en Odoo (16.0–19.0)
+# OWL 2 Components in Odoo (16.0–19.0)
 
-Odoo utiliza **OWL** (Odoo Web Library) para toda su interfaz desde la versión 16.0. OWL es un framework reactivo basado en clases y plantillas QWeb, fuertemente inspirado en React pero sin JSX (usa XML).
+Odoo uses **OWL** (Odoo Web Library) for its entire interface since version 16.0. OWL is a reactive framework based on classes and QWeb templates, heavily inspired by React but without JSX (it uses XML).
 
-A partir de **Odoo 17.0**, la versión del framework es **OWL 2**, que consolida la sintaxis (desaparece `owl.tags.xml`, se usa un getter estático `template`).
+Starting from **Odoo 17.0**, the framework version is **OWL 2**, which consolidates the syntax (`owl.tags.xml` disappears, a static `template` getter is used).
 
-## 1. Estructura de un Componente
+## 1. Component Structure
 
-Un componente típico consta de dos partes, idealmente separadas:
-1. `component_name.js`: La lógica de la clase.
-2. `component_name.xml`: La plantilla QWeb (no se incluye en manifests, sino que el JS la carga estáticamente o se compila en el bundle).
+A typical component consists of two parts, ideally separated:
+1. `component_name.js`: The class logic.
+2. `component_name.xml`: The QWeb template (not included in manifests, but statically loaded by JS or compiled into the bundle).
 
 ```javascript
 /** @odoo-module **/
@@ -32,46 +32,46 @@ export class MyComponent extends Component {
 }
 ```
 
-## 2. Inyección de Servicios (Hooks)
+## 2. Service Injection (Hooks)
 
-Odoo proporciona servicios globales (RPC, notificaciones, diálogos) a los que se accede mediante el hook `useService`:
+Odoo provides global services (RPC, notifications, dialogs) accessed via the `useService` hook:
 
-- `this.orm = useService("orm");` → Para interactuar con modelos (searchRead, call).
-- `this.rpc = useService("rpc");` → Para llamadas directas a controladores HTTP.
-- `this.notification = useService("notification");` → Para mostrar popups tipo toast.
-- `this.action = useService("action");` → Para ejecutar `do_action` (abrir vistas).
-- `this.dialog = useService("dialog");` → Para abrir modales.
+- `this.orm = useService("orm");` → To interact with models (searchRead, call).
+- `this.rpc = useService("rpc");` → For direct HTTP controller calls.
+- `this.notification = useService("notification");` → To show toast notifications.
+- `this.action = useService("action");` → To execute `do_action` (open views).
+- `this.dialog = useService("dialog");` → To open modals.
 
-## 3. Estado Reactivo (`useState`)
+## 3. Reactive State (`useState`)
 
-Solo las variables dentro de un objeto `useState` provocarán que el componente se re-renderice cuando cambien. Las variables de clase normales (`this.foo = 1`) no son reactivas.
+Only variables inside a `useState` object will trigger the component to re-render when they change. Normal class variables (`this.foo = 1`) are not reactive.
 
 ```javascript
 this.state = useState({
     counter: 0,
     loading: false,
 });
-// Cambiar this.state.counter disparará el re-renderizado
+// Changing this.state.counter will trigger a re-render
 ```
 
-## 4. Ciclo de Vida (Lifecycle Hooks)
+## 4. Lifecycle Hooks
 
-En OWL 2, el ciclo de vida se maneja mediante hooks importados de `@odoo/owl` y llamados *dentro* del método `setup()`:
+In OWL 2, the lifecycle is managed by hooks imported from `@odoo/owl` and called *inside* the `setup()` method:
 
-- `onWillStart(async () => {...})`: Antes del primer renderizado. Útil para hacer await de RPCs. El renderizado espera a que termine.
-- `onMounted(() => {...})`: Después de que el componente se inserta en el DOM.
-- `onWillUpdateProps((nextProps) => {...})`: Antes de recibir nuevas props.
-- `onWillUnmount(() => {...})`: Antes de destruirse (limpiar timers, eventos de window).
+- `onWillStart(async () => {...})`: Before the first render. Useful to await RPCs. Rendering waits for it to finish.
+- `onMounted(() => {...})`: After the component is attached to the DOM.
+- `onWillUpdateProps((nextProps) => {...})`: Before receiving new props.
+- `onWillUnmount(() => {...})`: Before being destroyed (cleanup timers, window events).
 
-## 5. Plantillas QWeb (Sintaxis OWL)
+## 5. QWeb Templates (OWL Syntax)
 
-OWL utiliza QWeb para sus plantillas. Directivas clave:
+OWL uses QWeb for its templates. Key directives:
 
-- `t-esc` / `t-out`: Renderizar texto seguro (evita XSS).
-- `t-if` / `t-elif` / `t-else`: Condicionales.
-- `t-foreach` + `t-as` + `t-key`: Bucles. **Importante**: OWL exige `t-key` en los bucles para reconciliación eficiente del DOM.
-- `t-on-click="methodName"`: Escuchar eventos nativos.
-- `t-att-class="{'active': state.isActive}"`: Clases dinámicas.
+- `t-esc` / `t-out`: Render safe text (prevents XSS).
+- `t-if` / `t-elif` / `t-else`: Conditionals.
+- `t-foreach` + `t-as` + `t-key`: Loops. **Important**: OWL requires `t-key` in loops for efficient DOM reconciliation.
+- `t-on-click="methodName"`: Listen to native events.
+- `t-att-class="{'active': state.isActive}"`: Dynamic classes.
 
 ```xml
 <?xml version="1.0" encoding="UTF-8" ?>
@@ -89,17 +89,17 @@ OWL utiliza QWeb para sus plantillas. Directivas clave:
 </templates>
 ```
 
-## 6. Registro en el Registro (Registry) de Odoo
+## 6. Registering in the Odoo Registry
 
-Para que Odoo pueda usar tu componente en una acción de cliente o como widget de campo, debes registrarlo:
+For Odoo to use your component in a client action or as a field widget, you must register it:
 
-**Como Acción de Cliente (Client Action):**
+**As a Client Action:**
 ```javascript
 import { registry } from "@web/core/registry";
 registry.category("actions").add("my_module.dashboard", MyComponent);
 ```
 
-**Como Widget de Campo (Field Widget):**
+**As a Field Widget:**
 ```javascript
 import { registry } from "@web/core/registry";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
@@ -110,9 +110,9 @@ MyFieldWidget.props = { ...standardFieldProps };
 registry.category("fields").add("my_widget", MyFieldWidget);
 ```
 
-## 7. Integración en el Manifest (`__manifest__.py`)
+## 7. Manifest Integration (`__manifest__.py`)
 
-Los archivos de OWL deben cargarse en la sección `assets` del manifest, dependiendo de dónde se vayan a usar:
+OWL files must be loaded in the `assets` section of the manifest, depending on where they will be used:
 
 ```python
     "assets": {
@@ -121,7 +121,7 @@ Los archivos de OWL deben cargarse en la sección `assets` del manifest, dependi
             "my_module/static/src/components/**/*.xml",
         ],
         "web.assets_frontend": [
-            # Para la web pública (e-commerce, portal)
+            # For public web (e-commerce, portal)
         ],
     },
 ```

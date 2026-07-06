@@ -1,15 +1,15 @@
 # XML Conventions — Odoo OCA Development
 
-Convenciones de XML para vistas, datos y seguridad en módulos Odoo (16.0–19.0).
+XML conventions for views, data, and security in Odoo modules (16.0–19.0).
 
 ---
 
-## 1. Regla condicional: `<tree>` vs `<list>`
+## 1. Conditional Rule: `<tree>` vs `<list>`
 
-> **Regla explícita**: si la versión objetivo es **16.0 o 17.0**, usar `<tree>`.
-> Si es **18.0 o 19.0**, usar `<list>`.
+> **Explicit Rule**: if the target version is **16.0 or 17.0**, use `<tree>`.
+> If it is **18.0 or 19.0**, use `<list>`.
 
-### Ejemplo lado a lado
+### Side-by-side Example
 
 ```xml
 <!-- ===== Odoo 16.0 / 17.0 ===== -->
@@ -41,39 +41,39 @@ Convenciones de XML para vistas, datos y seguridad en módulos Odoo (16.0–19.0
 </record>
 ```
 
-> **Nota sobre el `id` de la vista**: en 18.0+ se recomienda cambiar el sufijo
-> `_tree` por `_list` en los IDs de las vistas para mantener coherencia, aunque
-> Odoo no lo exige técnicamente.
+> **Note on the view `id`**: in 18.0+ it is recommended to change the `_tree` suffix
+> to `_list` in view IDs to maintain consistency, although
+> Odoo does not technically require it.
 
 ---
 
-## 2. Migración de `<tree>` a `<list>` (manual)
+## 2. Migrating from `<tree>` to `<list>` (manual)
 
-Cuando migres un módulo de 16.0/17.0 a 18.0/19.0, sigue estos pasos:
+When migrating a module from 16.0/17.0 to 18.0/19.0, follow these steps:
 
-### Paso 1: Reemplazar tags
+### Step 1: Replace tags
 
-Reemplaza `<tree` por `<list` y `</tree>` por `</list>` en todos los archivos XML.
+Replace `<tree` with `<list` and `</tree>` with `</list>` in all XML files.
 
-### Paso 2: Verificar atributos (CRÍTICO)
+### Step 2: Verify attributes (CRITICAL)
 
-Asegúrate de que estos atributos se mantengan **dentro del tag `<list>`**:
-- `editable="bottom"` o `editable="top"`
-- `create="true"` o `create="false"`
-- `delete="true"` o `delete="false"`
-- `default_order="campo [asc|desc]"`
-- `decoration-*` (ej. `decoration-danger="state == 'cancel'"`)
+Make sure these attributes are kept **inside the `<list>` tag**:
+- `editable="bottom"` or `editable="top"`
+- `create="true"` or `create="false"`
+- `delete="true"` or `delete="false"`
+- `default_order="field [asc|desc]"`
+- `decoration-*` (e.g. `decoration-danger="state == 'cancel'"`)
 - `multi_edit="1"`
 
 ```xml
-<!-- ❌ Bug común tras upgrade_code: atributos perdidos -->
+<!-- ❌ Common bug after upgrade_code: lost attributes -->
 <list string="Orders">
     <field name="name"/>
     <field name="state"/>
 </list>
-<!-- ¿Dónde quedaron editable, create, delete? -->
+<!-- Where did editable, create, delete go? -->
 
-<!-- ✅ Correcto: todos los atributos migrados -->
+<!-- ✅ Correct: all attributes migrated -->
 <list string="Orders" editable="bottom" create="true" delete="false"
       decoration-danger="state == 'cancel'">
     <field name="name"/>
@@ -81,19 +81,19 @@ Asegúrate de que estos atributos se mantengan **dentro del tag `<list>`**:
 </list>
 ```
 
-### Paso 3: Actualizar acciones de ventana
+### Step 3: Update window actions
 
 ```xml
-<!-- Si la acción referenciaba view_mode con "tree", cambiar a "list" -->
+<!-- If the action referenced view_mode with "tree", change it to "list" -->
 
-<!-- ❌ Puede fallar en 18.0 -->
+<!-- ❌ May fail in 18.0 -->
 <field name="view_mode">tree,form</field>
 
-<!-- ✅ Correcto en 18.0/19.0 -->
+<!-- ✅ Correct in 18.0/19.0 -->
 <field name="view_mode">list,form</field>
 ```
 
-### Paso 4: Actualizar herencias con xpath
+### Step 4: Update xpath inheritances
 
 ```xml
 <!-- 16.0/17.0 -->
@@ -107,21 +107,21 @@ Asegúrate de que estos atributos se mantengan **dentro del tag `<list>`**:
 </xpath>
 ```
 
-### ⚠️ Advertencia sobre `upgrade_code`
+### ⚠️ Warning about `upgrade_code`
 
-El script `odoo-bin upgrade_code --addons-path=<ruta>` puede hacer el reemplazo
-automáticamente, **pero tiene un bug conocido**: puede colocar atributos como
-`create`, `delete`, `editable`, `default_order` fuera del tag `<list>` o
-perderlos por completo.
+The script `odoo-bin upgrade_code --addons-path=<path>` can do the replacement
+automatically, **but it has a known bug**: it might place attributes like
+`create`, `delete`, `editable`, `default_order` outside the `<list>` tag or
+lose them entirely.
 
-**Siempre revisa manualmente el resultado** después de ejecutar `upgrade_code`.
+**Always manually review the result** after running `upgrade_code`.
 
 ---
 
-## 3. Convenciones de indentación
+## 3. Indentation Conventions
 
-- **4 espacios** de indentación (nunca tabuladores).
-- Atributos largos en líneas separadas, alineados:
+- **4 spaces** indentation (never tabs).
+- Long attributes on separate, aligned lines:
 
 ```xml
 <record id="my_module.view_order_form"
@@ -156,38 +156,38 @@ perderlos por completo.
 
 ---
 
-## 4. Convenciones de `xpath`
+## 4. `xpath` Conventions
 
-### Posiciones disponibles
+### Available Positions
 
-| Posición | Efecto |
+| Position | Effect |
 |----------|--------|
-| `inside` | Añade dentro, al final |
-| `before` | Añade justo antes |
-| `after` | Añade justo después |
-| `replace` | Reemplaza el nodo completo |
-| `attributes` | Modifica atributos del nodo |
+| `inside` | Adds inside, at the end |
+| `before` | Adds just before |
+| `after` | Adds just after |
+| `replace` | Replaces the entire node |
+| `attributes` | Modifies node attributes |
 
-### Ejemplos
+### Examples
 
 ```xml
-<!-- Añadir campo después de otro -->
+<!-- Add field after another -->
 <xpath expr="//field[@name='partner_id']" position="after">
     <field name="my_custom_field"/>
 </xpath>
 
-<!-- Reemplazar un campo -->
+<!-- Replace a field -->
 <xpath expr="//field[@name='old_field']" position="replace">
     <field name="new_field"/>
 </xpath>
 
-<!-- Modificar atributos -->
+<!-- Modify attributes -->
 <xpath expr="//field[@name='name']" position="attributes">
     <attribute name="required">1</attribute>
     <attribute name="invisible">state != 'draft'</attribute>
 </xpath>
 
-<!-- Añadir botón en el header -->
+<!-- Add button in the header -->
 <xpath expr="//header" position="inside">
     <button name="action_custom"
             type="object"
@@ -196,26 +196,26 @@ perderlos por completo.
 </xpath>
 ```
 
-### Buenas prácticas en xpath
+### Best Practices in xpath
 
-- Prefiere selectores por `name` de campo: `//field[@name='partner_id']`.
-- Evita selectores posicionales frágiles: `//group[2]/field[3]`.
-- Si el nodo no tiene nombre, usa clases o IDs descriptivos.
+- Prefer selectors by field `name`: `//field[@name='partner_id']`.
+- Avoid fragile positional selectors: `//group[2]/field[3]`.
+- If the node has no name, use descriptive classes or IDs.
 
 ---
 
-## 5. Nomenclatura de IDs XML
+## 5. XML ID Naming Conventions
 
-### Patrón estándar
+### Standard Pattern
 
+```text
+<module_name>.<type>_<model_with_underscores>_<variant>
 ```
-<nombre_módulo>.<tipo>_<modelo_con_underscores>_<variante>
-```
 
-### Ejemplos
+### Examples
 
 ```xml
-<!-- Vistas -->
+<!-- Views -->
 <record id="my_module.view_sale_order_form" model="ir.ui.view">
 <record id="my_module.view_sale_order_tree" model="ir.ui.view">   <!-- 16/17 -->
 <record id="my_module.view_sale_order_list" model="ir.ui.view">   <!-- 18/19 -->
@@ -223,58 +223,58 @@ perderlos por completo.
 <record id="my_module.view_sale_order_kanban" model="ir.ui.view">
 <record id="my_module.view_sale_order_pivot" model="ir.ui.view">
 
-<!-- Acciones -->
+<!-- Actions -->
 <record id="my_module.action_sale_order" model="ir.actions.act_window">
 
-<!-- Menús -->
+<!-- Menus -->
 <menuitem id="my_module.menu_sale_order_root" .../>
 <menuitem id="my_module.menu_sale_order_list" .../>
 
-<!-- Datos -->
+<!-- Data -->
 <record id="my_module.sale_order_template_basic" model="sale.order.template">
 
-<!-- Seguridad -->
+<!-- Security -->
 <record id="my_module.group_sale_manager" model="res.groups">
 <record id="my_module.rule_sale_order_company" model="ir.rule">
 ```
 
 ---
 
-## 6. Atributo `invisible` (cambio en 16.0+)
+## 6. `invisible` Attribute (change in 16.0+)
 
-A partir de Odoo 16.0, el atributo `invisible` acepta expresiones de dominio
-directamente (sin `attrs`):
+Starting from Odoo 16.0, the `invisible` attribute accepts domain expressions
+directly (without `attrs`):
 
 ```xml
-<!-- ❌ Antiguo (pre-16.0): usar attrs -->
+<!-- ❌ Old (pre-16.0): use attrs -->
 <field name="my_field" attrs="{'invisible': [('state', '!=', 'draft')]}"/>
 
-<!-- ✅ Correcto (16.0+): expresión directa -->
+<!-- ✅ Correct (16.0+): direct expression -->
 <field name="my_field" invisible="state != 'draft'"/>
 
-<!-- ✅ Correcto: expresiones complejas -->
+<!-- ✅ Correct: complex expressions -->
 <field name="my_field" invisible="state != 'draft' or not partner_id"/>
 ```
 
-> **Aplica a las 4 versiones** (16, 17, 18, 19). En 16.0 ambas sintaxis funcionan;
-> en 17.0+ la forma con `attrs` está deprecada.
+> **Applies to all 4 versions** (16, 17, 18, 19). In 16.0 both syntaxes work;
+> in 17.0+ the `attrs` form is deprecated.
 
 ---
 
-## 7. Estructura de archivos XML
+## 7. XML File Structure
 
-```
+```text
 views/
-├── sale_order_views.xml        # Todas las vistas de sale.order
-├── res_partner_views.xml       # Herencia de vistas de res.partner
-├── menuitems.xml               # Menús
-└── templates.xml               # Templates QWeb (si aplica)
+├── sale_order_views.xml        # All sale.order views
+├── res_partner_views.xml       # res.partner view inheritance
+├── menuitems.xml               # Menus
+└── templates.xml               # QWeb templates (if applicable)
 
 security/
 ├── ir.model.access.csv         # ACLs
-└── security.xml                # Grupos y reglas de registro
+└── security.xml                # Groups and record rules
 
 data/
-├── data.xml                    # Datos iniciales
-└── cron.xml                    # Acciones programadas
+├── data.xml                    # Initial data
+└── cron.xml                    # Scheduled actions
 ```

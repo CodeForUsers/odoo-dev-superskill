@@ -1,54 +1,54 @@
 # Versioning & Migrations — Odoo OCA Development
 
-Guía de versionado y migraciones para módulos Odoo (16.0–19.0).
+Versioning and migration guide for Odoo modules (16.0–19.0).
 
 ---
 
-## 1. Formato de versión
+## 1. Version Format
 
-El formato estándar OCA para la versión de un módulo es:
+The standard OCA format for a module's version is:
 
-```
+```text
 ODOO_MAJOR.ODOO_MINOR.MODULE_MAJOR.MODULE_MINOR.MODULE_PATCH
 ```
 
-### Ejemplos
+### Examples
 
-| Versión Odoo | Versión módulo | Significado |
-|-------------|----------------|-------------|
-| `16.0.1.0.0` | Primera versión estable para Odoo 16.0 | |
-| `16.0.1.1.0` | Minor: nueva funcionalidad retrocompatible | |
-| `16.0.1.1.1` | Patch: corrección de bug | |
-| `17.0.1.0.0` | Migración a Odoo 17.0 (reset de MODULE version) | |
-| `18.0.1.0.0` | Migración a Odoo 18.0 | |
-| `18.0.2.0.0` | Major: cambio que rompe compatibilidad en Odoo 18.0 | |
+| Odoo Version | Module Version | Meaning |
+|--------------|----------------|---------|
+| `16.0.1.0.0` | First stable version for Odoo 16.0 | |
+| `16.0.1.1.0` | Minor: new backward-compatible feature | |
+| `16.0.1.1.1` | Patch: bug fix | |
+| `17.0.1.0.0` | Migration to Odoo 17.0 (MODULE version reset) | |
+| `18.0.1.0.0` | Migration to Odoo 18.0 | |
+| `18.0.2.0.0` | Major: breaking change in Odoo 18.0 | |
 
-### En el `__manifest__.py`
+### In the `__manifest__.py`
 
 ```python
 {
     "name": "My Module",
-    "version": "18.0.1.0.0",  # Siempre incluir los 5 segmentos
+    "version": "18.0.1.0.0",  # Always include all 5 segments
     # ...
 }
 ```
 
-### Cuándo incrementar cada segmento
+### When to Increment Each Segment
 
-| Segmento | Cuándo incrementar |
-|----------|-------------------|
-| `ODOO_MAJOR.ODOO_MINOR` | Al migrar a una nueva versión de Odoo |
-| `MODULE_MAJOR` | Cambio que rompe compatibilidad (nuevo modelo, API cambiada) |
-| `MODULE_MINOR` | Nueva funcionalidad retrocompatible |
-| `MODULE_PATCH` | Corrección de bugs, mejoras menores |
+| Segment | When to increment |
+|---------|-------------------|
+| `ODOO_MAJOR.ODOO_MINOR` | When migrating to a new Odoo version |
+| `MODULE_MAJOR` | Breaking change (new model, changed API) |
+| `MODULE_MINOR` | New backward-compatible feature |
+| `MODULE_PATCH` | Bug fixes, minor improvements |
 
 ---
 
-## 2. Estructura de migraciones
+## 2. Migration Structure
 
-### Directorio de migraciones
+### Migrations Directory
 
-```
+```text
 my_module/
 ├── __manifest__.py          # version: "18.0.1.2.0"
 ├── migrations/
@@ -57,20 +57,20 @@ my_module/
 │   │   └── post-migration.py
 │   ├── 18.0.1.2.0/
 │   │   └── post-migration.py
-│   └── 17.0.1.0.0/          # Migración desde 16.0
+│   └── 17.0.1.0.0/          # Migration from 16.0
 │       ├── pre-migration.py
 │       └── post-migration.py
 ```
 
-### Tipos de scripts de migración
+### Types of Migration Scripts
 
-| Script | Cuándo se ejecuta | Uso típico |
-|--------|-------------------|-----------|
-| `pre-migration.py` | **Antes** de actualizar el módulo | Renombrar columnas/tablas, preparar datos |
-| `post-migration.py` | **Después** de actualizar el módulo | Migrar datos, recalcular campos computados |
-| `end-migration.py` | Al final de toda la actualización | Limpieza final (raramente necesario) |
+| Script | When it runs | Typical usage |
+|--------|--------------|---------------|
+| `pre-migration.py` | **Before** updating the module | Rename columns/tables, prepare data |
+| `post-migration.py` | **After** updating the module | Migrate data, recompute computed fields |
+| `end-migration.py` | At the end of the entire update | Final cleanup (rarely needed) |
 
-### Ejemplo de pre-migration
+### Pre-migration Example
 
 ```python
 # migrations/18.0.1.1.0/pre-migration.py
@@ -81,7 +81,7 @@ _logger = logging.getLogger(__name__)
 
 
 def migrate(cr, version):
-    """Pre-migración: renombrar columna antes de que Odoo la elimine."""
+    """Pre-migration: rename column before Odoo drops it."""
     if not version:
         return
 
@@ -91,10 +91,10 @@ def migrate(cr, version):
         ALTER TABLE my_model
         RENAME COLUMN old_field TO new_field
     """)
-    # cr.commit() es válido aquí (script de migración)
+    # cr.commit() is valid here (migration script)
 ```
 
-### Ejemplo de post-migration
+### Post-migration Example
 
 ```python
 # migrations/18.0.1.1.0/post-migration.py
@@ -106,7 +106,7 @@ _logger = logging.getLogger(__name__)
 
 
 def migrate(cr, version):
-    """Post-migración: recalcular campos y migrar datos."""
+    """Post-migration: recompute fields and migrate data."""
     if not version:
         return
 
@@ -114,11 +114,11 @@ def migrate(cr, version):
 
     _logger.info("Post-migration 18.0.1.1.0: updating computed fields")
 
-    # Recalcular un campo computado almacenado
+    # Recompute a stored computed field
     records = env["my.model"].search([])
     records._compute_display_name()
 
-    # Migrar datos de un campo a otro
+    # Migrate data from one field to another
     cr.execute("""
         UPDATE my_model
         SET new_status = CASE
@@ -134,65 +134,65 @@ def migrate(cr, version):
 
 ---
 
-## 3. Migración entre versiones mayores de Odoo
+## 3. Migration Between Major Odoo Versions
 
-### Migración paso a paso (recomendado)
+### Step-by-Step Migration (Recommended)
 
-Para migrar un módulo entre versiones mayores (ej. 16.0 → 18.0), aplica los
-cambios de **cada versión intermedia** en orden:
+To migrate a module between major versions (e.g., 16.0 → 18.0), apply the
+changes for **each intermediate version** in order:
 
 #### 16.0 → 17.0
 
-1. Cambiar prefijo de versión: `16.0.X.Y.Z` → `17.0.1.0.0`.
-2. Reemplazar `name_get()` por `_compute_display_name`.
-3. Adoptar `SQL()` wrapper para queries complejas (opcional pero recomendado).
-4. Sin cambios en vistas XML.
-5. Crear `migrations/17.0.1.0.0/` si hay cambios de datos.
+1. Change version prefix: `16.0.X.Y.Z` → `17.0.1.0.0`.
+2. Replace `name_get()` with `_compute_display_name`.
+3. Adopt `SQL()` wrapper for complex queries (optional but recommended).
+4. No changes in XML views.
+5. Create `migrations/17.0.1.0.0/` if there are data changes.
 
 #### 17.0 → 18.0
 
-1. Cambiar prefijo de versión: `17.0.X.Y.Z` → `18.0.1.0.0`.
-2. **OBLIGATORIO**: Reemplazar `<tree>` por `<list>` en todas las vistas.
-3. **OBLIGATORIO**: Reemplazar `tree` por `list` en `view_mode` de acciones.
-4. Reemplazar `read_group()` por `_read_group()`.
-5. Migrar tests JS de QUnit a Hoot (si aplica).
-6. Verificar herencias xpath que usen `//tree` → cambiar a `//list`.
+1. Change version prefix: `17.0.X.Y.Z` → `18.0.1.0.0`.
+2. **MANDATORY**: Replace `<tree>` with `<list>` in all views.
+3. **MANDATORY**: Replace `tree` with `list` in action `view_mode`.
+4. Replace `read_group()` with `_read_group()`.
+5. Migrate JS tests from QUnit to Hoot (if applicable).
+6. Check xpath inheritances using `//tree` → change to `//list`.
 
 #### 18.0 → 19.0
 
-1. Cambiar prefijo de versión: `18.0.X.Y.Z` → `19.0.1.0.0`.
-2. Reemplazar `record._cr`, `record._uid`, `record._context` por `self.env.*`.
-3. Implementar `_search_display_name` donde se sobrescribía `name_search()`.
-4. Evaluar uso de `GROUPING SETS` para vistas pivote.
+1. Change version prefix: `18.0.X.Y.Z` → `19.0.1.0.0`.
+2. Replace `record._cr`, `record._uid`, `record._context` with `self.env.*`.
+3. Implement `_search_display_name` where `name_search()` was overridden.
+4. Evaluate using `GROUPING SETS` for pivot views.
 
-### Saltos de 2+ versiones
+### Jumps of 2+ Versions
 
-Para saltos grandes (ej. 16.0 → 18.0), aplica las migraciones intermedias
-en orden: primero 16→17, luego 17→18.
+For large jumps (e.g., 16.0 → 18.0), apply intermediate migrations
+in order: first 16→17, then 17→18.
 
 ---
 
 ## 4. OpenUpgrade
 
-[OpenUpgrade](https://github.com/OCA/OpenUpgrade) es la herramienta OCA para
-migraciones automáticas de la base de datos entre versiones de Odoo.
+[OpenUpgrade](https://github.com/OCA/OpenUpgrade) is the OCA tool for
+automatic database migrations between Odoo versions.
 
-### Cuándo usar OpenUpgrade
+### When to Use OpenUpgrade
 
-| Escenario | Herramienta |
-|-----------|-------------|
-| Migrar un módulo custom | Scripts de migración propios (`migrations/`) |
-| Migrar una instancia completa de Odoo | OpenUpgrade |
-| Migrar módulos OCA | Verificar si OCA provee scripts de migración |
+| Scenario | Tool |
+|----------|------|
+| Migrate a custom module | Custom migration scripts (`migrations/`) |
+| Migrate an entire Odoo instance | OpenUpgrade |
+| Migrate OCA modules | Check if OCA provides migration scripts |
 
-### Estructura de OpenUpgrade
+### OpenUpgrade Structure
 
-```
+```text
 openupgradelib/
-├── openupgrade.py        # Funciones helper para migraciones
+├── openupgrade.py        # Helper functions for migrations
 └── ...
 
-# En tus scripts de migración:
+# In your migration scripts:
 from openupgradelib import openupgrade
 
 def migrate(cr, version):
@@ -206,42 +206,42 @@ def migrate(cr, version):
     )
 ```
 
-### Funciones helper de OpenUpgrade más comunes
+### Common OpenUpgrade Helper Functions
 
-| Función | Uso |
-|---------|-----|
-| `rename_fields` | Renombrar campos (columna + ir.model.fields) |
-| `rename_models` | Renombrar modelos (tabla + referencias) |
-| `rename_xmlids` | Renombrar XML IDs |
-| `logged_query` | Ejecutar SQL con logging |
-| `add_fields` | Añadir columnas faltantes |
-| `map_values` | Mapear valores de un campo a otro |
-| `column_exists` | Verificar si una columna existe |
+| Function | Usage |
+|----------|-------|
+| `rename_fields` | Rename fields (column + ir.model.fields) |
+| `rename_models` | Rename models (table + references) |
+| `rename_xmlids` | Rename XML IDs |
+| `logged_query` | Execute SQL with logging |
+| `add_fields` | Add missing columns |
+| `map_values` | Map values from one field to another |
+| `column_exists` | Check if a column exists |
 
 ---
 
-## 5. Checklist de migración
+## 5. Migration Checklist
 
-### Antes de empezar
+### Before Starting
 
-- [ ] ¿Tienes un backup de la base de datos?
-- [ ] ¿Has identificado todos los cambios de la versión origen a la destino?
-  (consulta `references/version-matrix.md`)
-- [ ] ¿Hay módulos dependientes que también necesiten migración?
+- [ ] Do you have a database backup?
+- [ ] Have you identified all changes from the source to the target version?
+  (check `references/version-matrix.md`)
+- [ ] Are there dependent modules that also need migration?
 
-### Durante la migración
+### During Migration
 
-- [ ] ¿Actualizado el prefijo de versión en `__manifest__.py`?
-- [ ] ¿Creado el directorio `migrations/X.0.1.0.0/`?
-- [ ] ¿Escritos los scripts pre/post-migration necesarios?
-- [ ] ¿Reemplazado `<tree>` por `<list>` (si migras a 18.0+)?
-- [ ] ¿Reemplazados métodos deprecados por sus equivalentes?
-- [ ] ¿Actualizadas las dependencias en el manifest?
+- [ ] Updated version prefix in `__manifest__.py`?
+- [ ] Created the `migrations/X.0.1.0.0/` directory?
+- [ ] Written necessary pre/post-migration scripts?
+- [ ] Replaced `<tree>` with `<list>` (if migrating to 18.0+)?
+- [ ] Replaced deprecated methods with their equivalents?
+- [ ] Updated dependencies in the manifest?
 
-### Después de la migración
+### After Migration
 
-- [ ] ¿Los tests pasan en la nueva versión?
-- [ ] ¿La UI funciona correctamente (vistas, menús, acciones)?
-- [ ] ¿Los datos se migraron correctamente?
-- [ ] ¿Los reportes se generan sin errores?
-- [ ] ¿Los crons funcionan correctamente?
+- [ ] Do tests pass on the new version?
+- [ ] Does the UI work correctly (views, menus, actions)?
+- [ ] Was data migrated correctly?
+- [ ] Are reports generated without errors?
+- [ ] Do crons work correctly?

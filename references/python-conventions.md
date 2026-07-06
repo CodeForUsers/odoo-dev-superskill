@@ -1,13 +1,13 @@
 # Python Conventions — Odoo OCA Development
 
-Convenciones de código Python para módulos Odoo (16.0–19.0) siguiendo las OCA Guidelines.
+Python code conventions for Odoo modules (16.0–19.0) strictly following OCA Guidelines.
 
 ---
 
-## 1. Orden de atributos en clases de modelo
+## 1. Attribute Ordering in Model Classes
 
-Respeta estrictamente este orden dentro de cualquier clase que herede de `models.Model`,
-`models.TransientModel` o `models.AbstractModel`:
+Strictly respect this order within any class inheriting from `models.Model`,
+`models.TransientModel`, or `models.AbstractModel`:
 
 ```python
 from odoo import api, fields, models, _
@@ -19,14 +19,14 @@ _logger = logging.getLogger(__name__)
 
 
 class SaleOrderLine(models.Model):
-    # --- 1. Atributos privados ---
+    # --- 1. Private attributes ---
     _name = "sale.order.line"
     _description = "Sale Order Line"
     _inherit = ["mail.thread", "mail.activity.mixin"]
     _order = "sequence, id"
     _rec_name = "display_name"
 
-    # --- 2. Campos (en orden: default, related, compute, store) ---
+    # --- 2. Fields (in order: default, related, compute, store) ---
     name = fields.Char(string="Description", required=True)
     sequence = fields.Integer(default=10)
     order_id = fields.Many2one("sale.order", required=True, ondelete="cascade")
@@ -44,7 +44,7 @@ class SaleOrderLine(models.Model):
         store=True,
     )
 
-    # --- 3. Restricciones SQL ---
+    # --- 3. SQL Constraints ---
     _sql_constraints = [
         (
             "positive_quantity",
@@ -53,24 +53,24 @@ class SaleOrderLine(models.Model):
         ),
     ]
 
-    # --- 4. Valores por defecto (métodos) ---
+    # --- 4. Default methods ---
     def _default_company_id(self):
         return self.env.company
 
-    # --- 5. Métodos compute ---
+    # --- 5. Compute methods ---
     @api.depends("quantity", "price_unit")
     def _compute_price_subtotal(self):
         for line in self:
             line.price_subtotal = line.quantity * line.price_unit
 
-    # --- 6. Métodos onchange ---
+    # --- 6. Onchange methods ---
     @api.onchange("product_id")
     def _onchange_product_id(self):
         if self.product_id:
             self.name = self.product_id.display_name
             self.price_unit = self.product_id.list_price
 
-    # --- 7. Métodos constrains ---
+    # --- 7. Constrains methods ---
     @api.constrains("quantity")
     def _check_quantity(self):
         for line in self:
@@ -79,7 +79,7 @@ class SaleOrderLine(models.Model):
                     _("Quantity must be positive for line '%s'.") % line.name
                 )
 
-    # --- 8. Métodos CRUD ---
+    # --- 8. CRUD methods ---
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
@@ -103,13 +103,13 @@ class SaleOrderLine(models.Model):
                 )
         return super().unlink()
 
-    # --- 9. Métodos de acción (botones) ---
+    # --- 9. Action methods (buttons) ---
     def action_confirm(self):
         self.ensure_one()
-        # lógica de confirmación
+        # confirmation logic
         return True
 
-    # --- 10. Métodos privados / de negocio ---
+    # --- 10. Private / Business methods ---
     def _prepare_invoice_line(self):
         self.ensure_one()
         return {
@@ -121,30 +121,30 @@ class SaleOrderLine(models.Model):
 
 ---
 
-## 2. SQL seguro según versión
+## 2. Safe SQL by Version
 
-### Odoo 16.0: `cr.execute` con parámetros
+### Odoo 16.0: `cr.execute` with parameters
 
 ```python
-# ✅ Correcto: parámetros como tupla
+# ✅ Correct: parameters as tuple
 self.env.cr.execute(
     "SELECT id FROM res_partner WHERE name ILIKE %s AND active = %s",
     (f"%{search_term}%", True),
 )
 results = self.env.cr.fetchall()
 
-# ❌ PROHIBIDO: concatenación de strings (inyección SQL)
+# ❌ FORBIDDEN: string concatenation (SQL injection)
 self.env.cr.execute(
     "SELECT id FROM res_partner WHERE name = '" + name + "'"
 )
 ```
 
-### Odoo 17.0+: wrapper `SQL()`
+### Odoo 17.0+: `SQL()` wrapper
 
 ```python
 from odoo.tools import SQL
 
-# ✅ Correcto en 17.0+: usar SQL() wrapper
+# ✅ Correct in 17.0+: use SQL() wrapper
 query = SQL(
     "SELECT id, name FROM %s WHERE active = %s AND name ILIKE %s",
     SQL.identifier(self._table),
@@ -153,68 +153,68 @@ query = SQL(
 )
 self.env.cr.execute(query)
 
-# ✅ Composición segura de queries
+# ✅ Safe query composition
 base_query = SQL("SELECT id FROM %s", SQL.identifier("res_partner"))
 where_clause = SQL("WHERE active = %s", True)
 full_query = SQL("%s %s", base_query, where_clause)
 self.env.cr.execute(full_query)
 ```
 
-> **Nota**: en 17.0+ puedes seguir usando `cr.execute(query, params)` con tupla,
-> pero `SQL()` es la forma recomendada para queries complejas con composición.
+> **Note**: in 17.0+ you can still use `cr.execute(query, params)` with a tuple,
+> but `SQL()` is the recommended way for complex queries with composition.
 
 ---
 
-## 3. Prohibición de `cr.commit()`
+## 3. Prohibition of `cr.commit()`
 
-**Nunca uses `cr.commit()`** en código de negocio normal. El framework gestiona
-las transacciones automáticamente.
+**Never use `cr.commit()`** in normal business code. The framework manages
+transactions automatically.
 
 ```python
-# ❌ PROHIBIDO en código de negocio
+# ❌ FORBIDDEN in business code
 def action_process(self):
     self.state = "done"
-    self.env.cr.commit()  # ¡NUNCA!
+    self.env.cr.commit()  # NEVER!
 
-# ✅ Correcto: dejar que el framework gestione la transacción
+# ✅ Correct: let the framework manage the transaction
 def action_process(self):
     self.state = "done"
-    # el commit ocurre automáticamente al finalizar la request
+    # commit occurs automatically at the end of the request
 ```
 
-**Excepciones permitidas** (únicas):
-- Scripts de **migración** (`migrations/X.0.Y.Z.W/pre-migration.py`).
-- Métodos de **cron** que procesan grandes volúmenes y necesitan commits parciales
-  para evitar bloqueos largos (documentar siempre el motivo).
+**Permitted exceptions** (unique):
+- **Migration** scripts (`migrations/X.0.Y.Z.W/pre-migration.py`).
+- **Cron** methods that process large volumes and need partial commits
+  to avoid long locks (always document the reason).
 
 ```python
-# ✅ Aceptable SOLO en un cron con documentación
+# ✅ Acceptable ONLY in a cron with documentation
 def _cron_process_large_batch(self):
-    """Procesa lotes grandes con commits parciales para evitar locks."""
+    """Processes large batches with partial commits to avoid locks."""
     batch_size = 100
     records = self.search([("state", "=", "pending")])
     for i in range(0, len(records), batch_size):
         batch = records[i:i + batch_size]
         batch.write({"state": "done"})
-        self.env.cr.commit()  # Commit parcial documentado
+        self.env.cr.commit()  # Documented partial commit
         _logger.info("Processed batch %d/%d", i // batch_size + 1,
                       len(records) // batch_size + 1)
 ```
 
 ---
 
-## 4. Sustitución de métodos deprecados por versión
+## 4. Replacement of Deprecated Methods by Version
 
-### `name_get()` — deprecado desde 17.0, eliminado en 19.0
+### `name_get()` — deprecated since 17.0, removed in 19.0
 
 ```python
-# --- Odoo 16.0: name_get() es el estándar ---
-# ✅ Correcto en 16.0
+# --- Odoo 16.0: name_get() is the standard ---
+# ✅ Correct in 16.0
 def name_get(self):
     return [(rec.id, f"[{rec.code}] {rec.name}") for rec in self]
 
-# --- Odoo 17.0+: usar _compute_display_name ---
-# ✅ Correcto en 17.0, 18.0, 19.0
+# --- Odoo 17.0+: use _compute_display_name ---
+# ✅ Correct in 17.0, 18.0, 19.0
 display_name = fields.Char(compute="_compute_display_name")
 
 @api.depends("code", "name")
@@ -223,19 +223,19 @@ def _compute_display_name(self):
         rec.display_name = f"[{rec.code}] {rec.name}"
 ```
 
-### `read_group()` — deprecado en 18.0, eliminado en 19.0
+### `read_group()` — deprecated in 18.0, removed in 19.0
 
 ```python
-# --- Odoo 16.0/17.0: read_group() es el estándar ---
-# ✅ Correcto en 16.0/17.0
+# --- Odoo 16.0/17.0: read_group() is the standard ---
+# ✅ Correct in 16.0/17.0
 results = self.env["sale.order"].read_group(
     domain=[("state", "=", "sale")],
     fields=["amount_total:sum"],
     groupby=["partner_id"],
 )
 
-# --- Odoo 18.0+: usar _read_group() ---
-# ✅ Correcto en 18.0/19.0
+# --- Odoo 18.0+: use _read_group() ---
+# ✅ Correct in 18.0/19.0
 results = self.env["sale.order"]._read_group(
     domain=[("state", "=", "sale")],
     groupby=["partner_id"],
@@ -243,11 +243,11 @@ results = self.env["sale.order"]._read_group(
 )
 ```
 
-### `_search_display_name` — nuevo en 19.0
+### `_search_display_name` — new in 19.0
 
 ```python
-# --- Odoo 19.0: reemplaza la búsqueda por nombre ---
-# ✅ Correcto en 19.0
+# --- Odoo 19.0: replaces name_search ---
+# ✅ Correct in 19.0
 @api.model
 def _search_display_name(self, operator, value):
     return [
@@ -259,7 +259,7 @@ def _search_display_name(self, operator, value):
 
 ---
 
-## 5. Manejo de excepciones y logging
+## 5. Exception Handling and Logging
 
 ```python
 import logging
@@ -269,30 +269,30 @@ from odoo.exceptions import UserError, ValidationError
 
 _logger = logging.getLogger(__name__)
 
-# ❌ PROHIBIDO: except genérico sin acción
+# ❌ FORBIDDEN: generic except without action
 try:
     result = self._process_data()
 except:
     pass
 
-# ❌ PROHIBIDO: except Exception sin logging
+# ❌ FORBIDDEN: except Exception without logging
 try:
     result = self._process_data()
 except Exception:
     pass
 
-# ✅ Correcto: captura específica con logging
+# ✅ Correct: specific catch with logging
 try:
     result = self._process_data()
 except ValidationError:
-    raise  # re-lanzar errores de validación
+    raise  # re-raise validation errors
 except Exception as e:
     _logger.exception("Error processing data for record %s: %s", self.id, e)
     raise UserError(
         _("An error occurred while processing. Please contact support.")
     ) from e
 
-# ✅ Correcto: logging informativo
+# ✅ Correct: informative logging
 _logger.info("Processing %d records in batch", len(self))
 _logger.debug("Record %s values: %s", self.id, vals)
 _logger.warning("Deprecated method called for model %s", self._name)
@@ -300,35 +300,35 @@ _logger.warning("Deprecated method called for model %s", self._name)
 
 ---
 
-## 6. Imports y estructura de archivos
+## 6. Imports and File Structure
 
-### Orden de imports (PEP 8 + OCA)
+### Import Ordering (PEP 8 + OCA)
 
 ```python
-# 1. Imports de la librería estándar
+# 1. Standard library imports
 import logging
 from datetime import datetime, timedelta
 
-# 2. Imports de terceros
+# 2. Third-party imports
 import requests
 
-# 3. Imports de Odoo
+# 3. Odoo imports
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
 from odoo.tools import float_compare, float_is_zero
 
-# 4. Logger (siempre después de los imports)
+# 4. Logger (always after imports)
 _logger = logging.getLogger(__name__)
 ```
 
-### Un modelo por archivo
+### One Model Per File
 
-```
+```text
 models/
 ├── __init__.py
 ├── sale_order.py          # class SaleOrder
 ├── sale_order_line.py     # class SaleOrderLine
-└── res_partner.py         # class ResPartner (herencia)
+└── res_partner.py         # class ResPartner (inheritance)
 ```
 
 ```python
@@ -340,17 +340,17 @@ from . import res_partner
 
 ---
 
-## 7. Uso de `self.ensure_one()`
+## 7. Using `self.ensure_one()`
 
 ```python
-# ✅ Correcto: usar ensure_one() cuando el método opera sobre un solo registro
+# ✅ Correct: use ensure_one() when the method operates on a single record
 def action_confirm(self):
     self.ensure_one()
     if self.state != "draft":
         raise UserError(_("Only draft orders can be confirmed."))
     self.state = "confirmed"
 
-# ✅ Correcto: iterar cuando el método puede recibir múltiples registros
+# ✅ Correct: iterate when the method can receive multiple records
 def action_cancel(self):
     for record in self:
         if record.state == "confirmed":

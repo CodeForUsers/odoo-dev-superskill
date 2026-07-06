@@ -1,68 +1,68 @@
-# Rendimiento y SQL Directo en Odoo — Buenas Prácticas (OCA)
+# Performance and Direct SQL in Odoo — Best Practices (OCA)
 
-El ORM de Odoo es potente, pero en operaciones masivas (miles o millones de registros) puede ser lento debido a los cálculos, validaciones, gestión de caché y eventos de los campos compute.
+The Odoo ORM is powerful, but in massive operations (thousands or millions of records) it can be slow due to calculations, validations, cache management, and compute field events.
 
-Cuando el rendimiento es crítico (por ejemplo, en un script de migración masiva o un cálculo financiero pesado), un desarrollador senior puede **saltarse el ORM y ejecutar consultas SQL directas**. 
+When performance is critical (e.g., in a massive migration script or heavy financial calculation), a senior developer may **bypass the ORM and execute direct SQL queries**. 
 
 > [!WARNING]
-> Usar SQL directo debe ser el último recurso. Bypassea la seguridad (ir.rule), las validaciones (constrains) y la caché del ORM.
+> Using direct SQL should be the last resort. It bypasses security (ir.rule), validations (constrains), and the ORM cache.
 
-## 1. Prevención de Inyección SQL (¡CRÍTICO!)
+## 1. SQL Injection Prevention (CRITICAL!)
 
-**NUNCA** utilices formateo de cadenas (`%s`, `.format()`, f-strings) para insertar variables en una consulta SQL si la variable proviene del usuario o de datos no confiables.
+**NEVER** use string formatting (`%s`, `.format()`, f-strings) to insert variables into an SQL query if the variable comes from the user or untrusted data.
 
-**Incorrecto (Vulnerable a Inyección SQL):**
+**Incorrect (Vulnerable to SQL Injection):**
 ```python
-# PELIGRO! Si req_name es "1'; DROP TABLE res_partner; --", la DB se borra.
+# DANGER! If req_name is "1'; DROP TABLE res_partner; --", the DB gets wiped.
 self.env.cr.execute(f"SELECT id FROM res_partner WHERE name = '{req_name}'")
 ```
 
-**Correcto (Uso de Bind Variables de Psycopg2):**
+**Correct (Using Psycopg2 Bind Variables):**
 ```python
-# SEGURO. Psycopg2 escapa automáticamente la variable.
+# SAFE. Psycopg2 automatically escapes the variable.
 self.env.cr.execute(
     "SELECT id FROM res_partner WHERE name = %s", 
     [req_name]
 )
 ```
 
-## 2. Invalidación de Caché (`env.cache.invalidate`)
+## 2. Cache Invalidation (`env.cache.invalidate`)
 
-Si modificas un registro mediante SQL (UPDATE), **el ORM no se entera**. Si ese registro estaba en memoria, las siguientes llamadas del código leerán el valor obsoleto.
+If you modify a record via SQL (UPDATE), **the ORM is unaware**. If that record was in memory, subsequent code calls will read the stale value.
 
 > [!IMPORTANT]
-> Siempre que modifiques datos mediante `cr.execute()`, debes invalidar la caché para forzar al ORM a leer de nuevo de la base de datos.
+> Whenever you modify data using `cr.execute()`, you must invalidate the cache to force the ORM to read from the database again.
 
 ```python
-# Actualizamos el estado saltándonos las reglas del ORM
+# We update the state bypassing the ORM rules
 self.env.cr.execute("""
     UPDATE sale_order 
     SET state = 'done' 
     WHERE id = %s
 """, [order.id])
 
-# Opción 1: Invalidar TODO el caché (Odoo 17+)
+# Option 1: Invalidate ALL the cache (Odoo 17+)
 self.env.invalidate_all()
 
-# Opción 2: Invalidar un campo específico para esos registros (Más eficiente)
-# (En Odoo 15/16 se llamaba invalidate_cache)
+# Option 2: Invalidate a specific field for those records (More efficient)
+# (In Odoo 15/16 this was called invalidate_cache)
 self.env.cache.invalidate([
     (self.env['sale.order']._fields['state'], order.ids)
 ])
 ```
 
-## 3. Seguridad a Nivel de Fila y SQL (Multi-Company)
+## 3. Row-Level Security and SQL (Multi-Company)
 
-Cuando usas SQL directo (`SELECT`), ignoras los filtros de seguridad de Odoo (`ir.rule`). Si tienes entornos multi-empresa, podrías devolverle al usuario registros de otras empresas.
+When using direct SQL (`SELECT`), you ignore Odoo's security filters (`ir.rule`). If you have multi-company environments, you might return records from other companies to the user.
 
-Para aplicar reglas de seguridad dinámicamente en consultas SQL nativas, usa el compilador de seguridad del ORM:
+To dynamically apply security rules in native SQL queries, use the ORM's security compiler:
 
 ```python
-# Obtenemos la cláusula WHERE y los parámetros para respetar las reglas de 'sale.order'
+# We obtain the WHERE clause and parameters to respect the 'sale.order' rules
 query = self.env['sale.order']._where_calc([])
 where_clause, where_params = query.get_sql()
 
-# Construimos nuestra query raw combinando las reglas
+# We construct our raw query combining the rules
 sql = f"""
     SELECT id, name, amount_total 
     FROM sale_order 
@@ -75,19 +75,19 @@ self.env.cr.execute(sql, params)
 results = self.env.cr.dictfetchall()
 ```
 
-## 4. Consultas Eficientes: Operaciones en Lote (Batch)
+## 4. Efficient Queries: Batch Operations
 
-Evita ejecutar `cr.execute` dentro de un bucle for. Modifica múltiples registros a la vez usando la cláusula `IN`.
+Avoid executing `cr.execute` inside a for loop. Modify multiple records at once using the `IN` clause.
 
-**Incorrecto (Lento):**
+**Incorrect (Slow):**
 ```python
 for record_id in list_of_ids:
     self.env.cr.execute("UPDATE account_move SET state='draft' WHERE id=%s", [record_id])
 ```
 
-**Correcto (Rápido):**
+**Correct (Fast):**
 ```python
-# Psycopg2 requiere que la tupla/lista se pase como parámetro para la cláusula IN
+# Psycopg2 requires the tuple/list to be passed as a parameter for the IN clause
 self.env.cr.execute("""
     UPDATE account_move 
     SET state='draft' 

@@ -1,18 +1,18 @@
-# Arquitectura del Punto de Venta (POS) — Odoo 16.0–19.0
+# Point of Sale (POS) Architecture — Odoo 16.0–19.0
 
-El POS de Odoo es una **aplicación offline** diseñada para seguir funcionando aunque se caiga el servidor. Por tanto, su arquitectura es drásticamente diferente al del resto del ERP.
+Odoo's POS is an **offline-first application** designed to keep working even if the server goes down. Therefore, its architecture is drastically different from the rest of the ERP.
 
-## 1. El Paradigma Offline
+## 1. The Offline Paradigm
 
-- **Carga inicial**: Al abrir el POS, Odoo emite llamadas RPC masivas para descargar al navegador (IndexedDB / LocalStorage) un subconjunto completo de datos (Productos, Clientes, Impuestos).
-- **Operación Local**: Cuando se cobra a un cliente, NO se hace un RPC para crear el pedido. Todo se calcula en JS usando los modelos locales.
-- **Sincronización (Sync)**: Periódicamente o al presionar "Cerrar Caja", el POS agrupa los pedidos locales y los envía al backend (método `create_from_ui` del modelo `pos.order`) en un gran payload JSON.
+- **Initial Load**: Upon opening the POS, Odoo makes massive RPC calls to download a complete subset of data (Products, Customers, Taxes) into the browser (IndexedDB / LocalStorage).
+- **Local Operation**: When checking out a customer, it does NOT make an RPC call to create the order. Everything is calculated in JS using local models.
+- **Synchronization (Sync)**: Periodically or when pressing "Close Session", the POS groups local orders and sends them to the backend (`create_from_ui` method of the `pos.order` model) in a large JSON payload.
 
-## 2. Modelos Locales (JavaScript)
+## 2. Local Models (JavaScript)
 
-En el POS, los modelos no viven en la base de datos de PostgreSQL (durante la operación), sino en colecciones en memoria. En Odoo 16/17, residen en `models.js` (Backbone.js heredado). En Odoo 18+, se refactoriza usando clases nativas JS.
+In the POS, models do not live in the PostgreSQL database (during operation), but in in-memory collections. In Odoo 16/17, they reside in `models.js` (legacy Backbone.js). In Odoo 18+, this is refactored using native JS classes.
 
-Ejemplo de cómo extender un modelo local en Odoo 16/17/18 para añadir un campo al pedido:
+Example of extending a local model in Odoo 16/17/18 to add a field to the order:
 
 ```javascript
 /** @odoo-module **/
@@ -25,14 +25,14 @@ patch(Order.prototype, {
         this.custom_field = this.custom_field || false;
     },
     
-    // El método export_as_JSON define qué datos viajan al backend al sincronizar
+    // The export_as_JSON method defines what data travels to the backend when syncing
     export_as_JSON() {
         const json = super.export_as_JSON(...arguments);
         json.custom_field = this.custom_field;
         return json;
     },
     
-    // El método init_from_JSON lee datos restaurados (ej. tras recargar pestaña)
+    // The init_from_JSON method reads restored data (e.g., after reloading the tab)
     init_from_JSON(json) {
         super.init_from_JSON(...arguments);
         this.custom_field = json.custom_field;
@@ -40,11 +40,11 @@ patch(Order.prototype, {
 });
 ```
 
-## 3. Carga de Datos desde el Backend al Frontend (JS)
+## 3. Data Loading from Backend to Frontend (JS)
 
-Si añades un campo a `res.partner` y necesitas verlo en el POS, debes inyectarlo durante la carga inicial. 
+If you add a field to `res.partner` and need to see it in the POS, you must inject it during the initial load. 
 
-**En Odoo 16:** (Vía Python `pos.session`)
+**In Odoo 16:** (Via Python `pos.session`)
 ```python
 # models/pos_session.py
 class PosSession(models.Model):
@@ -56,9 +56,9 @@ class PosSession(models.Model):
         return result
 ```
 
-**En Odoo 17/18/19:** (Vía JS `PosStore` model load)
+**In Odoo 17/18/19:** (Via JS `PosStore` model load)
 ```javascript
-// La carga se gestiona directamente en JS en versiones más modernas
+// Loading is managed directly in JS in more modern versions
 import { PosStore } from "@point_of_sale/app/store/pos_store";
 import { patch } from "@web/core/utils/patch";
 
@@ -70,15 +70,15 @@ patch(PosStore.prototype, {
 });
 ```
 
-## 4. UI del POS (OWL)
+## 4. POS UI (OWL)
 
-La interfaz del POS utiliza componentes OWL. El patrón más habitual es añadir botones a la pantalla de productos (`ProductScreen`) o a la pantalla de pago (`PaymentScreen`).
+The POS interface uses OWL components. The most common pattern is adding buttons to the product screen (`ProductScreen`) or the payment screen (`PaymentScreen`).
 
-*(Ver `templates/pos/pos_button.js.tpl` para un ejemplo completo de inyección de un botón).*
+*(See `templates/pos/pos_button.js.tpl` for a complete button injection example).*
 
-## 5. Recibir Pedidos en el Backend (Python)
+## 5. Receiving Orders in the Backend (Python)
 
-Cuando el POS envía el JSON con el pedido, Python debe extraer tus campos personalizados antes de crear el `pos.order` real.
+When the POS sends the JSON with the order, Python must extract your custom fields before creating the real `pos.order`.
 
 ```python
 # models/pos_order.py
@@ -89,7 +89,7 @@ class PosOrder(models.Model):
 
     @api.model
     def _order_fields(self, ui_order):
-        """Extrae campos del JSON (ui_order) al diccionario vals de creación."""
+        """Extracts fields from the JSON (ui_order) into the creation vals dictionary."""
         res = super()._order_fields(ui_order)
         res['custom_field'] = ui_order.get('custom_field', False)
         return res
@@ -97,7 +97,7 @@ class PosOrder(models.Model):
 
 ## 6. Manifest Assets
 
-El código JS/XML del POS NO se carga en `web.assets_backend`, sino en `point_of_sale.assets`:
+POS JS/XML code is NOT loaded into `web.assets_backend`, but into `point_of_sale.assets`:
 
 ```python
     "assets": {
