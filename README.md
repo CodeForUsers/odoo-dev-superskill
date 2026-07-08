@@ -6,7 +6,7 @@
 ![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)
 [![skills.sh](https://skills.sh/b/CodeForUsers/odoo-dev-superskill)](https://skills.sh/CodeForUsers/odoo-dev-superskill)
 
-A comprehensive AI agent skill providing scaffolding, refactoring tools, and architecture templates for Odoo module development. Enforces Odoo Community Association (OCA) coding standards and secur[...]
+A comprehensive AI agent skill providing scaffolding, refactoring tools, and architecture templates for Odoo module development. Enforces Odoo Community Association (OCA) coding standards and security guidelines across Odoo versions 16.0 through 19.0.
 
 ## Table of Contents
 - [Features](#features)
@@ -118,7 +118,7 @@ odoo-dev-superskill/
 
 ## Usage
 
-Once installed, standard AI coding agents (Claude Code, Cursor, Windsurf, Gemini) will automatically detect the `SKILL.md` file when operating in the workspace. The skill provides the agent with c[...]
+Once installed, standard AI coding agents (Claude Code, Cursor, Windsurf, Gemini) will automatically detect the `SKILL.md` file when operating in the workspace. The skill provides the agent with context regarding:
 - Target Odoo versions and required syntax changes.
 - Appropriate file structures for new modules.
 - Linter and formatting rules.
@@ -163,8 +163,8 @@ Templates can be combined when a task spans multiple areas (e.g., a migration th
 ## Optional Agent Tooling (Codegraph & Engram)
 
 If `codegraph` or `engram` servers are active in your local agent MCP environment, agents can optionally leverage them to enhance efficiency:
-- **Codegraph (Optional)**: Speeds up codebase analysis by searching model inheritance, tracing method call paths, and resolving overloaded core definitions.
-- **Engram (Optional)**: Automatically preserves local developer decisions, Odoo ORM bug resolution findings, and custom project-specific conventions between sessions.
+- **Codegraph (Optional)** ([colbymchenry/codegraph](https://github.com/colbymchenry/codegraph)): Speeds up codebase analysis by searching model inheritance, tracing method call paths, and resolving overloaded core definitions.
+- **Engram (Optional)** ([Gentleman-Programming/engram](https://github.com/Gentleman-Programming/engram)): Automatically preserves local developer decisions, Odoo ORM bug resolution findings, and custom project-specific conventions between sessions.
 
 ## Key Version Differences
 
