@@ -1,5 +1,7 @@
 # odoo-dev-superskill
 
+![Banner Header](references/images/banner-header.png)
+
 **Odoo Module Development Skill for AI Agents (16.0–19.0)**
 
 ![Version](https://img.shields.io/badge/Odoo-16.0%20%7C%2017.0%20%7C%2018.0%20%7C%2019.0-714B67?style=for-the-badge&logo=odoo&logoColor=white)
@@ -65,20 +67,17 @@ odoo-dev-superskill/
 │   │   ├── connector-behavior.md     # API & integration behavior
 │   │   ├── review-behavior.md        # Code review behavior
 │   │   └── testing-behavior.md       # Testing & QA behavior
+│   ├── images/                       # Screen and terminal mockups
+│   │   ├── banner-header.png         # Project repository banner image
+│   │   └── terminal-mockup.png       # CLI execution mockup image
+│   ├── backend-rules.md              # Python conventions, SQL security, and performance
+│   ├── cheatsheet-agent.md           # Compact token-efficient agent cheatsheet
 │   ├── ecommerce-connectors.md       # Patterns for E-commerce integrations
 │   ├── error-recipes.json            # Machine-readable linter remediation recipes
-│   ├── cheatsheet-agent.md           # Compact token-efficient agent cheatsheet
+│   ├── frontend-ui-rules.md          # XML views, OWL, and POS rules
 │   ├── maturity-levels.md            # Addon maturity definitions
-│   ├── orm-changelog-16-19.md        # ORM version differences
-│   ├── owl-components.md             # OWL 2 frontend patterns
-│   ├── pos-architecture.md           # POS offline architecture guide
-│   ├── python-conventions.md         # Python conventions and attribute order
-│   ├── security.md                   # Security & access control guidelines
-│   ├── sql-performance.md            # Raw SQL performance optimization
-│   ├── testing.md                    # Testing guidelines (TransactionCase/Hoot)
-│   ├── version-matrix.md             # Syntax differences matrix
-│   ├── versioning-migrations.md      # OpenUpgrade and versioning guide
-│   └── xml-conventions.md            # XML backend conventions
+│   ├── migrations-and-versions.md    # Changelogs, version matrix, and OpenUpgrade guide
+│   └── testing.md                    # Testing guidelines (TransactionCase/Hoot)
 ├── scripts/                          # CI/CD and automation tools
 │   ├── auto_migrate_full.py          # Orchestrates full migration pipeline
 │   ├── autofix_linter.py             # Automatically applies linter fixes to files
@@ -117,6 +116,8 @@ odoo-dev-superskill/
 ```
 
 ## Usage
+
+![Terminal Mockup](references/images/terminal-mockup.png)
 
 Once installed, standard AI coding agents (Claude Code, Cursor, Windsurf, Gemini) will automatically detect the `SKILL.md` file when operating in the workspace. The skill provides the agent with context regarding:
 - Target Odoo versions and required syntax changes.

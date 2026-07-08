@@ -40,7 +40,7 @@ The detected version determines:
 - Which ORM methods to use and which are deprecated.
 - The frontend testing framework (QUnit vs Hoot).
 
-Check `references/version-matrix.md` for the full breakdown of differences.
+Check `references/migrations-and-versions.md` for the full breakdown of differences.
 
 ---
 
@@ -52,8 +52,8 @@ Follow these 6 steps in order for any Odoo development task:
 |------|--------|----------------|
 | 1 | **Detect target Odoo version** | `scripts/detect_odoo_version.py`, section 1 |
 | 2 | **Generate module structure** | `templates/manifest/`, `templates/readme_structure/` |
-| 3 | **Write Python model(s)** | `templates/model_skeleton.py.tpl`, `references/python-conventions.md` |
-| 4 | **Write views, security, and data** | `references/xml-conventions.md`, `references/security.md` |
+| 3 | **Write Python model(s)** | `templates/model_skeleton.py.tpl`, `references/backend-rules.md` |
+| 4 | **Write views, security, and data** | `references/frontend-ui-rules.md`, `references/backend-rules.md` |
 | 5 | **Auto-verify** with validation scripts | `scripts/validate_manifest.py`, `scripts/check_anti_patterns.py` |
 | 6 | **Declare module maturity level** | `references/maturity-levels.md` |
 
@@ -71,7 +71,7 @@ These rules govern Odoo module development. They are classified by urgency level
 5. **Prefix XML IDs** with the technical module name: `<module_name>.view_<model>_form`.
 
 ### Recommended (Best Practices)
-6. **Respect the OCA order** of attributes in model classes (see `references/python-conventions.md`).
+6. **Respect the OCA order** of attributes in model classes (see `references/backend-rules.md`).
 7. **One model per Python file**, except for very small auxiliary models.
 8. **Include tests** — minimum one `TransactionCase` per model with basic CRUD operations.
 9. **Document with OCA README** — use the structure from `templates/readme_structure/`.
@@ -91,7 +91,7 @@ These rules govern Odoo module development. They are classified by urgency level
 > **Golden Rule**: Before generating any view, check this table and use
 > `<tree>` or `<list>` according to the target version. **Never assume a default.**
 
-For full details on each version, check `references/version-matrix.md`.
+For full details on each version, check `references/migrations-and-versions.md`.
 
 ### Target Version Examples (Few-Shot Reasoning)
 * **Example 1 (New Module v18.0+)**:
@@ -128,162 +128,24 @@ These files are complementary to the global skill behavior. They do not replace 
 
 ## 6. References Index
 
+Refer to these consolidated guides for technical specifications. **Avoid scanning multiple files; use these curated references directly:**
+
 | Reference | Description |
 |-----------|-------------|
-| [version-matrix.md](references/version-matrix.md) | Changes between 16–19, compatibility table |
-| [python-conventions.md](references/python-conventions.md) | Attribute ordering, safe SQL, exception handling |
-| [xml-conventions.md](references/xml-conventions.md) | tree vs list, xpath, indentation, ID naming |
-| [orm-changelog-16-19.md](references/orm-changelog-16-19.md) | Detailed ORM changelog between versions |
-| [security.md](references/security.md) | ACLs, ir.rule, HTTP controllers |
-| [sql-performance.md](references/sql-performance.md) | Raw SQL usage, ORM bypass, caching strategies |
-| [testing.md](references/testing.md) | Backend and frontend tests (QUnit / Hoot) |
-| [versioning-migrations.md](references/versioning-migrations.md) | Versioning, migrations, OpenUpgrade |
-| [maturity-levels.md](references/maturity-levels.md) | Alpha / Beta / Stable / Mature checklist |
-| [ecommerce-connectors.md](references/ecommerce-connectors.md) | Patterns for Amazon, eBay, WooCommerce, Mirakl, Temu |
-| [owl-components.md](references/owl-components.md) | OWL 2 component patterns and hooks |
-| [pos-architecture.md](references/pos-architecture.md) | POS offline architecture guide |
-| [error-recipes.json](references/error-recipes.json) | Machine-readable linter error recipes |
-| [cheatsheet-agent.md](references/cheatsheet-agent.md) | Compact token-efficient agent cheatsheet |
+| [backend-rules.md](references/backend-rules.md) | Attribute ordering, Python exceptions, raw SQL safety, caching, ACLs, record rules, and controller security |
+| [frontend-ui-rules.md](references/frontend-ui-rules.md) | tree vs list views, xpath selection, indentation, XML IDs, OWL 2 development, and POS architecture |
+| [migrations-and-versions.md](references/migrations-and-versions.md) | Version compatibility matrix, API changelog (v16-19), and OCA migration/OpenUpgrade guidelines |
+| [testing.md](references/testing.md) | Backend TransactionCase and frontend OWL 2 Hoot test patterns |
+| [ecommerce-connectors.md](references/ecommerce-connectors.md) | Integration patterns for Amazon, eBay, WooCommerce, Mirakl, and Temu |
+| [maturity-levels.md](references/maturity-levels.md) | Addon readiness checklists (Alpha, Beta, Stable, Mature) |
+| [error-recipes.json](references/error-recipes.json) | Machine-readable linter remediation recipes |
+| [cheatsheet-agent.md](references/cheatsheet-agent.md) | Compact, token-efficient agent quick-reference |
+
+> **Note**: For lists of all available boilerplates and CLI scripts, read [skill-manifest.json](skill-manifest.json) at the repository root.
 
 ---
 
-## 7. Available Templates
-
-### Models and Python Logic
-
-| Template | Usage |
-|----------|-------|
-| `templates/manifest/manifest_{16,17,18,19}.py.tpl` | Manifest adapted to each version |
-| `templates/model_skeleton.py.tpl` | Model skeleton with OCA ordering |
-| `templates/wizard.py.tpl` | TransientModel with confirm/cancel and defaults |
-
-### Controllers, Web, and REST APIs
-
-| Template | Usage |
-|----------|-------|
-| `templates/controller.py.tpl` | Basic HTTP controller (JSON API, webhook, public page) |
-| `templates/controllers/base_rest_api.py.tpl` | Pure and self-documented REST API with OpenAPI (OCA `base_rest`) |
-
-### XML Views (Backend)
-
-| Template | Usage |
-|----------|-------|
-| `templates/views/tree_view_16_17.xml.tpl` | List view with `<tree>` (v16/17) |
-| `templates/views/list_view_18_19.xml.tpl` | List view with `<list>` (v18/19) |
-| `templates/views/advanced_form_view.xml.tpl` | "Mega" Form (Smart buttons, Notebooks, One2many) |
-| `templates/views/view_inheritance.xml.tpl` | View inheritance (`xpath`, `position="after/inside"`) |
-| `templates/views/kanban_view.xml.tpl` | Kanban view with QWeb, colors, and activities |
-| `templates/views/pivot_view.xml.tpl` | Pivot view (rows, columns, measures) |
-| `templates/views/graph_view.xml.tpl` | Graph view (bar/line/pie) |
-| `templates/views/calendar_view.xml.tpl` | Calendar view (start/stop, color, filters) |
-| `templates/views/wizard_form_view.xml.tpl` | Wizard form with button footer |
-| `templates/views/cron.xml.tpl` | Scheduled actions (daily/hourly/minutes) |
-
-### Security and Performance
-
-| File | Usage |
-|------|-------|
-| `references/sql-performance.md` | Guide for raw SQL usage (ORM bypass) and caching |
-| `templates/security/multi_company_rules.xml.tpl`| Advanced `ir.rule` rules for multi-company environments |
-| `templates/security/ir.model.access.csv.tpl` | ACLs with OCA nomenclature |
-| `templates/security/security.xml.tpl` | User/Manager groups + standard rules |
-
-### Initial and Demo Data
-
-| Template | Usage |
-|----------|-------|
-| `templates/data/data.xml.tpl` | Initial data (params, email templates, server actions) |
-| `templates/data/demo_data.xml.tpl` | Demo data with noupdate=1 |
-
-### Reports and Printed Documents
-
-| Template | Usage |
-|----------|-------|
-| `templates/reports/report_action.xml.tpl` | ir.actions.report record + paper format (PDF) |
-| `templates/reports/report_qweb_template.xml.tpl` | HTML/QWeb template with external_layout (PDF) |
-| `templates/reports/report_xlsx_action.xml.tpl` | Report action for Excel exports |
-| `templates/reports/report_xlsx.py.tpl` | Dynamic Excel generator in Python (OCA `report_xlsx`) |
-
-### Frontend (OWL 2 and SCSS)
-
-| Template | Usage |
-|----------|-------|
-| `templates/static/src/components/owl_component.js.tpl` | JS class for OWL 2 component (state, hooks, ORM) |
-| `templates/static/src/components/owl_component.xml.tpl` | QWeb/XML view for the OWL component |
-| `templates/static/src/components/dashboard/dashboard.js.tpl`| Advanced interactive dashboard (Client Action OWL) |
-| `templates/static/src/components/dashboard/dashboard.xml.tpl`| Dashboard QWeb (KPIs, tables, and events) |
-| `templates/static/src/scss/custom_styles.scss.tpl` | SCSS stylesheet for backend customization |
-
-### Infrastructure, CI/CD, and Docker
-
-| Template | Usage |
-|----------|-------|
-| `templates/infra/.pre-commit-config.yaml.tpl` | Standard OCA config (Black, Isort, Flake8) |
-| `templates/infra/github_actions_test.yml.tpl` | GitHub Actions CI with `maintainer-quality-tools` |
-| `templates/infra/docker-compose.yml.tpl` | Local Odoo + PostgreSQL environment |
-
-### Website and Customer Portal
-
-| Template | Usage |
-|----------|-------|
-| `templates/website/snippet.xml.tpl` | Drag & Drop structure for Website Builder |
-| `templates/website/snippet_options.xml.tpl` | Customization options in sidebar |
-| `templates/website/portal_view.xml.tpl` | QWeb views for the customer portal (List/Detail) |
-| `templates/website/portal_controller.py.tpl` | Secure route controller for the portal |
-
-### Point of Sale (POS)
-
-| Template | Usage |
-|----------|-------|
-| `references/pos-architecture.md` | POS offline architecture guide |
-| `templates/pos/pos_button.js.tpl` | Injection of custom action buttons in OWL |
-
-### Integrations, Emails, and Migrations (OpenUpgrade)
-
-| Template | Usage |
-|----------|-------|
-| `templates/integrations/queue_job.py.tpl` | Queuing heavy tasks using OCA `queue_job` |
-| `templates/models/mail_alias_mixin.py.tpl` | Automatic email reception (parsing to records) |
-| `templates/scripts/external_rpc_client.py.tpl` | Standalone script (XML-RPC) to interact externally |
-| `templates/migrations/pre-migration.py.tpl` | Pre-migration script (rename tables/columns) |
-| `templates/migrations/post-migration.py.tpl` | Post-migration script (recompute data) |
-
-### Backend, Frontend, and UI Testing
-
-| Template | Usage |
-|----------|-------|
-| `templates/readme_structure/*.rst` | Standard OCA README structure |
-| `templates/tests/test_transaction_case.py.tpl` | Backend tests (CRUD, compute, constrains, security) |
-| `templates/tests/test_hoot.js.tpl` | Frontend tests with Hoot (v18/19 only) |
-| `templates/tests/tour.js.tpl` | E2E UI Test script (Odoo Tours) simulating clicks |
-| `templates/tests/test_tour_python.py.tpl` | Python `HttpCase` test to run the Tour |
-
----
-
-## 8. Automation and Validation Scripts
-
-| Script | Function |
-|--------|----------|
-| `scripts/autofix_xml.py` | Auto-converts `attrs`, `states`, and `<tree>` to 17/18+ syntax |
-| `scripts/detect_odoo_version.py` | Detects the project's Odoo version |
-| `scripts/scaffold_module.py` | Generates a complete Odoo module from scratch |
-| `scripts/create_migration.py` | Creates the structure and scripts for migrating with OpenUpgrade |
-| `scripts/extract_translations.py` | Extracts strings to a `.pot` file for translation |
-| `scripts/validate_manifest.py` | Validates manifest structure and content |
-| `scripts/check_anti_patterns.py` | Detects common anti-patterns in Odoo code |
-| `scripts/check_acls.py` | Verifies that all models have an ACL entry |
-| `scripts/check_test_coverage.py` | Verifies test existence and basic coverage |
-| `scripts/migrate_code_patterns.py` | Migrates code syntax between versions (e.g., `<tree>` to `<list>`, `attrs` to `invisible`) using `odoo-module-migrator` |
-| `scripts/port_addon.py` | Ports commits between branches using `oca-port` |
-| `scripts/auto_migrate_full.py` | Executes the full pipeline (migrate patterns + port commits) |
-| `scripts/validate_repo_consistency.py` | Validates repository internal references consistency |
-| `scripts/autofix_linter.py` | Automatically applies linter fixes to files (ACLs, tree to list, etc.) |
-
-Run these scripts after every code generation or modification to ensure quality before delivery.
-
----
-
-## 9. Advanced Agent Tooling (Optional: Codegraph & Engram)
+## 7. Advanced Agent Tooling (Optional: Codegraph & Engram)
 
 If `codegraph` or `engram` servers are active in your MCP environment, leverage them to improve speed, precision, and context persistence:
 
