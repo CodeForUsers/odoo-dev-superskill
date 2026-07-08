@@ -14,7 +14,10 @@ A comprehensive AI agent skill providing scaffolding, refactoring tools, and arc
 - [Repository Structure](#repository-structure)
 - [Usage](#usage)
 - [Behavior Templates](#behavior-templates)
+- [Optional Agent Tooling](#optional-agent-tooling-codegraph--engram)
 - [Key Version Differences](#key-version-differences)
+- [Coverage & Limitations](#coverage--limitations)
+- [Contributing](#contributing)
 - [Author](#author)
 - [License](#license)
 
@@ -52,6 +55,7 @@ pip install git+https://github.com/OCA/odoo-module-migrator.git
 ```text
 odoo-dev-superskill/
 ├── SKILL.md                          # Agent instructions and entry point
+├── skill-manifest.json               # Skill capabilities manifest (JSON format)
 ├── references/                       # Technical architecture guides
 │   ├── agents/                       # Behavior templates (loaded on demand)
 │   │   ├── scaffold-behavior.md      # Module creation behavior
@@ -61,24 +65,55 @@ odoo-dev-superskill/
 │   │   ├── connector-behavior.md     # API & integration behavior
 │   │   ├── review-behavior.md        # Code review behavior
 │   │   └── testing-behavior.md       # Testing & QA behavior
+│   ├── ecommerce-connectors.md       # Patterns for E-commerce integrations
+│   ├── error-recipes.json            # Machine-readable linter remediation recipes
+│   ├── cheatsheet-agent.md           # Compact token-efficient agent cheatsheet
+│   ├── maturity-levels.md            # Addon maturity definitions
 │   ├── orm-changelog-16-19.md        # ORM version differences
 │   ├── owl-components.md             # OWL 2 frontend patterns
-│   ├── sql-performance.md            # Raw SQL guidelines
-│   └── ...                           
+│   ├── pos-architecture.md           # POS offline architecture guide
+│   ├── python-conventions.md         # Python conventions and attribute order
+│   ├── security.md                   # Security & access control guidelines
+│   ├── sql-performance.md            # Raw SQL performance optimization
+│   ├── testing.md                    # Testing guidelines (TransactionCase/Hoot)
+│   ├── version-matrix.md             # Syntax differences matrix
+│   ├── versioning-migrations.md      # OpenUpgrade and versioning guide
+│   └── xml-conventions.md            # XML backend conventions
 ├── scripts/                          # CI/CD and automation tools
-│   ├── scaffold_module.py            # Module generator
+│   ├── auto_migrate_full.py          # Orchestrates full migration pipeline
+│   ├── autofix_linter.py             # Automatically applies linter fixes to files
 │   ├── autofix_xml.py                # Legacy XML refactoring
-│   ├── validate_manifest.py          # Manifest validation
+│   ├── check_acls.py                 # Verifies models have an ACL entry
+│   ├── check_anti_patterns.py        # Detects common anti-patterns
+│   ├── check_test_coverage.py        # Verifies test existence & coverage
+│   ├── create_migration.py           # Creates OpenUpgrade migration folder
+│   ├── detect_odoo_version.py        # Detects Odoo version
+│   ├── extract_translations.py       # Extracts translatable strings
 │   ├── migrate_code_patterns.py      # Code pattern migration (odoo-module-migrator)
 │   ├── port_addon.py                 # Port commits between branches (oca-port)
-│   └── auto_migrate_full.py          # Orchestrates full migration pipeline
+│   ├── scaffold_module.py            # Module generator
+│   ├── validate_manifest.py          # Manifest validation
+│   └── validate_repo_consistency.py  # Repository internal reference validator
 └── templates/                        # OCA-compliant code boilerplates
-    ├── controllers/                  
-    ├── models/                       
-    ├── views/                        
-    ├── security/                     
-    ├── static/                       
-    └── tests/                        
+    ├── controller.py.tpl             # Controller templates
+    ├── controllers/                  # Advanced API controllers (REST, OpenAPI)
+    ├── data/                         # Initial and demo XML data
+    ├── infra/                        # CI/CD, Docker and pre-commit configs
+    ├── integrations/                 # Queue jobs templates
+    ├── manifest/                     # Versioned manifest templates
+    ├── migrations/                   # OpenUpgrade migration scripts
+    ├── model_skeleton.py.tpl         # Standard model template
+    ├── models/                       # Standard models and mixins
+    ├── pos/                          # POS OWL component extensions
+    ├── readme_structure/             # OCA README templates
+    ├── reports/                      # QWeb PDF and XLSX report actions
+    ├── scripts/                      # External RPC client scripts
+    ├── security/                     # ir.model.access and Multi-company rules
+    ├── static/                       # OWL 2 components and SCSS styles
+    ├── tests/                        # Backend & Frontend test templates
+    ├── views/                        # XML views (tree, list, kanban, pivot, etc.)
+    ├── website/                      # Snippets & portal controllers
+    └── wizard.py.tpl                 # Transient model template
 ```
 
 ## Usage
@@ -125,6 +160,12 @@ The skill includes specialized behavior templates that AI agents load on demand 
 
 Templates can be combined when a task spans multiple areas (e.g., a migration that also changes XML views).
 
+## Optional Agent Tooling (Codegraph & Engram)
+
+If `codegraph` or `engram` servers are active in your local agent MCP environment, agents can optionally leverage them to enhance efficiency:
+- **Codegraph (Optional)**: Speeds up codebase analysis by searching model inheritance, tracing method call paths, and resolving overloaded core definitions.
+- **Engram (Optional)**: Automatically preserves local developer decisions, Odoo ORM bug resolution findings, and custom project-specific conventions between sessions.
+
 ## Key Version Differences
 
 | Feature | 16.0 | 17.0 | 18.0 | 19.0 |
@@ -136,6 +177,25 @@ Templates can be combined when a task spans multiple areas (e.g., a migration th
 | **SQL Wrapper** | N/A | `SQL()` class | `SQL()` class | `SQL()` class |
 
 *\* Indicates a breaking change introduced in this version.*
+
+## Coverage & Limitations
+
+The skill is optimized for development, migrations, and quality assurance of Odoo modules, but has specific limitations:
+- **No Production SysAdmin / DevOps**: Does not manage PostgreSQL clustering, Docker container deployment in production, or cloud provisioning.
+- **Complex Data Migrations**: Does not automate complex database data migration logic that requires custom business analysis.
+- **Proprietary/Closed Integrations**: Cannot build connectors for proprietary platforms without public SDKs or API documentation.
+- **Human Review**: Recommended modifications to existing business workflows must be manually verified.
+
+## Contributing
+
+We welcome contributions to expand our Odoo agent capabilities! To contribute:
+1. **Adding Templates**: Place any new `.tpl` file inside the appropriate `templates/` subdirectory.
+2. **Expanding References**: Technical guides must be placed in `references/` as markdown files.
+3. **Updating the Skill**: Ensure all new files are cataloged in `SKILL.md` and `README.md`.
+4. **Validation**: Always run the repository consistency validator before submitting a PR:
+   ```bash
+   python scripts/validate_repo_consistency.py
+   ```
 
 ## Author
 [David Carreres Gómez](https://github.com/CodeForUsers)

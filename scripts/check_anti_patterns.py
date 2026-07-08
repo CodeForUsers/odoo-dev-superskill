@@ -242,8 +242,22 @@ class AntiPatternChecker:
                         "Use direct attributes (invisible, readonly, required) instead."
                     )
 
-    def print_report(self):
+    def print_report(self, json_output=False):
         """Print the findings report."""
+        if json_output:
+            import json
+            errors = len([f for f in self.findings if f["severity"] == "ERROR"])
+            warnings = len([f for f in self.findings if f["severity"] == "WARNING"])
+            print(json.dumps({
+                "findings": self.findings,
+                "summary": {
+                    "errors": errors,
+                    "warnings": warnings,
+                    "success": errors == 0
+                }
+            }, indent=2))
+            return
+
         module_name = os.path.basename(self.module_path)
         version_str = self.odoo_version or "unknown"
 
@@ -287,6 +301,7 @@ def main():
     # Parse arguments
     path = os.getcwd()
     version = None
+    json_output = False
 
     args = sys.argv[1:]
     i = 0
@@ -294,6 +309,9 @@ def main():
         if args[i] == "--version" and i + 1 < len(args):
             version = args[i + 1]
             i += 2
+        elif args[i] == "--json":
+            json_output = True
+            i += 1
         elif not args[i].startswith("-"):
             path = args[i]
             i += 1
@@ -302,7 +320,7 @@ def main():
 
     checker = AntiPatternChecker(path, odoo_version=version)
     success = checker.check_all()
-    checker.print_report()
+    checker.print_report(json_output=json_output)
 
     sys.exit(0 if success else 1)
 

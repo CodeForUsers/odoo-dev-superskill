@@ -11,13 +11,13 @@ description: >
   models.Model, _inherit, fields.Many2one, <tree>, <list>, or a __manifest__.py,
   without mentioning the word Odoo explicitly.
 license: MIT
-version: 1.1.0
+version: 1.1.1
 compatibility: ["claude-code", "antigravity", "cursor", "windsurf", "codex-cli", "gemini-cli"]
 ---
 
 # odoo-dev-superskill — Odoo Development Skill (16.0–19.0)
 
-A complete skill enabling any AI agent to generate, review, refactor, and migrate
+An expert skill enabling AI agents to generate, review, refactor, and migrate
 Odoo modules from version 16.0 to 19.x, adhering to OCA Guidelines.
 
 ---
@@ -59,17 +59,20 @@ Follow these 6 steps in order for any Odoo development task:
 
 ---
 
-## 3. Critical Universal Rules (All Versions)
+## 3. Universal Development Rules (All Versions)
 
-These rules apply **always**, regardless of the Odoo version:
+These rules govern Odoo module development. They are classified by urgency level:
 
+### Mandatory (Must Follow)
 1. **Never use `cr.commit()`** outside of crons or migration scripts.
 2. **Never use bare `except: pass`** — catch specific exceptions and log with `_logger`.
 3. **Always define ACLs** (`ir.model.access.csv`) for every new model.
 4. **Never execute raw SQL** without parameterization — use `cr.execute(query, params)` or `SQL()` (17+).
-5. **Respect the OCA order** of attributes in model classes (see `references/python-conventions.md`).
-6. **One model per Python file**, except for very small auxiliary models.
-7. **Prefix XML IDs** with the technical module name: `<module_name>.view_<model>_form`.
+5. **Prefix XML IDs** with the technical module name: `<module_name>.view_<model>_form`.
+
+### Recommended (Best Practices)
+6. **Respect the OCA order** of attributes in model classes (see `references/python-conventions.md`).
+7. **One model per Python file**, except for very small auxiliary models.
 8. **Include tests** — minimum one `TransactionCase` per model with basic CRUD operations.
 9. **Document with OCA README** — use the structure from `templates/readme_structure/`.
 10. **Version correctly** — format `MAJOR.MINOR.PATCH.BUILD` tied to the Odoo version.
@@ -89,6 +92,17 @@ These rules apply **always**, regardless of the Odoo version:
 > `<tree>` or `<list>` according to the target version. **Never assume a default.**
 
 For full details on each version, check `references/version-matrix.md`.
+
+### Target Version Examples (Few-Shot Reasoning)
+* **Example 1 (New Module v18.0+)**:
+  * *Request*: "Create a new Odoo 18.0 module with a list view."
+  * *Action*: Generate the list view using the `<list>` tag instead of `<tree>`.
+* **Example 2 (XML View Migration to v17.0+)**:
+  * *Request*: "Migrate this view with `attrs="{'invisible': [('state', '=', 'draft')]}"` to Odoo 17."
+  * *Action*: Refactor the conditional visibility to `invisible="state == 'draft'"`.
+* **Example 3 (Ambiguous version context)**:
+  * *Request*: "Generate model logic for this addon." (No manifest exists, no version specified).
+  * *Action*: Run `detect_odoo_version.py` first. If the version is still undetermined, ask: *"Which Odoo version are you developing for? (16.0 / 17.0 / 18.0 / 19.0)"*.
 
 ---
 
@@ -128,6 +142,8 @@ These files are complementary to the global skill behavior. They do not replace 
 | [ecommerce-connectors.md](references/ecommerce-connectors.md) | Patterns for Amazon, eBay, WooCommerce, Mirakl, Temu |
 | [owl-components.md](references/owl-components.md) | OWL 2 component patterns and hooks |
 | [pos-architecture.md](references/pos-architecture.md) | POS offline architecture guide |
+| [error-recipes.json](references/error-recipes.json) | Machine-readable linter error recipes |
+| [cheatsheet-agent.md](references/cheatsheet-agent.md) | Compact token-efficient agent cheatsheet |
 
 ---
 
@@ -244,13 +260,13 @@ These files are complementary to the global skill behavior. They do not replace 
 
 ---
 
-## 8. Automation and Validation Scripts (Grandmaster)
+## 8. Automation and Validation Scripts
 
 | Script | Function |
 |--------|----------|
-| `scripts/autofix_xml.py` | **Black Magic!** Auto-converts `attrs`, `states`, and `<tree>` to 17/18+ syntax |
+| `scripts/autofix_xml.py` | Auto-converts `attrs`, `states`, and `<tree>` to 17/18+ syntax |
 | `scripts/detect_odoo_version.py` | Detects the project's Odoo version |
-| `scripts/scaffold_module.py` | **Generates a complete module from scratch** |
+| `scripts/scaffold_module.py` | Generates a complete Odoo module from scratch |
 | `scripts/create_migration.py` | Creates the structure and scripts for migrating with OpenUpgrade |
 | `scripts/extract_translations.py` | Extracts strings to a `.pot` file for translation |
 | `scripts/validate_manifest.py` | Validates manifest structure and content |
@@ -260,5 +276,24 @@ These files are complementary to the global skill behavior. They do not replace 
 | `scripts/migrate_code_patterns.py` | Migrates code syntax between versions (e.g., `<tree>` to `<list>`, `attrs` to `invisible`) using `odoo-module-migrator` |
 | `scripts/port_addon.py` | Ports commits between branches using `oca-port` |
 | `scripts/auto_migrate_full.py` | Executes the full pipeline (migrate patterns + port commits) |
+| `scripts/validate_repo_consistency.py` | Validates repository internal references consistency |
+| `scripts/autofix_linter.py` | Automatically applies linter fixes to files (ACLs, tree to list, etc.) |
 
 Run these scripts after every code generation or modification to ensure quality before delivery.
+
+---
+
+## 9. Advanced Agent Tooling (Optional: Codegraph & Engram)
+
+If `codegraph` or `engram` servers are active in your MCP environment, leverage them to improve speed, precision, and context persistence:
+
+### Codegraph (Code Intelligence)
+* **Code Navigation & Search**: Avoid raw grep or manual file reading. Use `codegraph_explore` to inspect how Odoo models are inherited or extended (e.g., searching for `_inherit = "res.partner"`).
+* **Call Graph Analysis**: Before refactoring or renaming ORM methods, call `codegraph_callers` or `codegraph_impact` to assess what references will break.
+* **Overloaded Definition Search**: For common Odoo methods like `write` or `create`, use `codegraph_node` (with `includeCode`) to view all definitions in a single call instead of browsing multiple files.
+
+### Engram (Persistent Memory)
+* **Session Persistence**: Proactively record architectural choices, resolved Odoo framework bugs, or custom guidelines for this repository using `mem_save`.
+* **Search History**: Use `mem_search` at the start of a session or when encountering an obscure ORM error to see if it was resolved previously.
+* **Session Summaries**: Call `mem_session_summary` before ending your turn to keep a record of completed and pending tasks.
+

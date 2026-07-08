@@ -189,8 +189,32 @@ class AclChecker:
         self.info.append(f"ACL entries: {len(self.acl_models)}")
         self.info.append(f"Models without ACL: {len(missing)}")
 
-    def print_report(self):
+    def print_report(self, json_output=False):
         """Print the ACL coverage report."""
+        if json_output:
+            import json
+            models_list = []
+            for model_name, filepath in sorted(self.models_found.items()):
+                models_list.append({
+                    "model": model_name,
+                    "file": os.path.relpath(filepath, self.module_path),
+                    "has_acl": model_name in self.acl_models
+                })
+            print(json.dumps({
+                "models": models_list,
+                "errors": self.errors,
+                "warnings": self.warnings,
+                "info": self.info,
+                "summary": {
+                    "total_models": len(self.models_found),
+                    "total_acls": len(self.acl_models),
+                    "errors": len(self.errors),
+                    "warnings": len(self.warnings),
+                    "success": len(self.errors) == 0
+                }
+            }, indent=2))
+            return
+
         module_name = os.path.basename(self.module_path)
 
         print(f"\n{'=' * 60}")
@@ -230,11 +254,24 @@ class AclChecker:
 
 def main():
     """Main entry point."""
-    path = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
+    path = os.getcwd()
+    json_output = False
+
+    args = sys.argv[1:]
+    i = 0
+    while i < len(args):
+        if args[i] == "--json":
+            json_output = True
+            i += 1
+        elif not args[i].startswith("-"):
+            path = args[i]
+            i += 1
+        else:
+            i += 1
 
     checker = AclChecker(path)
     success = checker.check()
-    checker.print_report()
+    checker.print_report(json_output=json_output)
 
     sys.exit(0 if success else 1)
 

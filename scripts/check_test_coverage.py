@@ -256,8 +256,44 @@ class TestCoverageChecker:
                 f"Require at least 3 tests per model."
             )
 
-    def print_report(self):
+    def print_report(self, json_output=False):
         """Print the coverage report."""
+        if json_output:
+            import json
+            # Normalize model and class filepaths to relative path
+            models_list = []
+            for model in self.models_found:
+                models_list.append({
+                    "model_name": model["model_name"],
+                    "class_name": model["class_name"],
+                    "file": os.path.relpath(model["file"], self.module_path)
+                })
+            test_classes_list = []
+            for tc in self.test_classes:
+                test_classes_list.append({
+                    "name": tc["name"],
+                    "base": tc["base"],
+                    "file": os.path.relpath(tc["file"], self.module_path)
+                })
+            print(json.dumps({
+                "models": models_list,
+                "test_classes": test_classes_list,
+                "test_methods": self.test_methods,
+                "errors": self.errors,
+                "warnings": self.warnings,
+                "info": self.info,
+                "summary": {
+                    "total_models": len(self.models_found),
+                    "total_test_files": len(self.test_files),
+                    "total_test_classes": len(self.test_classes),
+                    "total_test_methods": len(self.test_methods),
+                    "errors": len(self.errors),
+                    "warnings": len(self.warnings),
+                    "success": len(self.errors) == 0
+                }
+            }, indent=2))
+            return
+
         module_name = os.path.basename(self.module_path)
 
         print(f"\n{'=' * 60}")
@@ -307,11 +343,24 @@ class TestCoverageChecker:
 
 def main():
     """Main entry point."""
-    path = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
+    path = os.getcwd()
+    json_output = False
+
+    args = sys.argv[1:]
+    i = 0
+    while i < len(args):
+        if args[i] == "--json":
+            json_output = True
+            i += 1
+        elif not args[i].startswith("-"):
+            path = args[i]
+            i += 1
+        else:
+            i += 1
 
     checker = TestCoverageChecker(path)
     success = checker.check()
-    checker.print_report()
+    checker.print_report(json_output=json_output)
 
     sys.exit(0 if success else 1)
 

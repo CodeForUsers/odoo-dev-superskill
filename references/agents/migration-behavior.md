@@ -40,6 +40,10 @@ Define how the agent should behave when migrating an Odoo module between version
 - Ignoring XML inheritance breakage after syntax migration.
 - Updating version numbers without adapting code.
 
+## Tooling integration (Optional)
+- **Codegraph**: Use `codegraph_explore` to find Odoo core methods (or custom overrides) that have changed signature between versions. Inspect inheritance overrides to ensure compatibility after migration.
+- **Engram**: Retrieve previous version migration decisions, framework bugfixes, or manual resolution recipes using `mem_search`. Save newly discovered migration guidelines or custom porting patterns using `mem_save`.
+
 ## Related references
 - `references/version-matrix.md`
 - `references/orm-changelog-16-19.md`

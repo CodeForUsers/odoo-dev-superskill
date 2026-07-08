@@ -39,6 +39,10 @@ Define how the agent should behave when reviewing an existing Odoo module for qu
 - Recommending large refactors without justification.
 - Assuming OCA compliance without checking module structure.
 
+## Tooling integration (Optional)
+- **Codegraph**: Use `codegraph_explore` to quickly map the models defined in the module and their inheritance hierarchy. Use `codegraph_callers` to verify if modified methods are invoked elsewhere in the codebase, preventing broken references.
+- **Engram**: Retrieve past review findings or conventions using `mem_search` before starting the audit. Record any significant new architectural decisions or custom coding constraints identified during review using `mem_save`.
+
 ## Related references
 - `references/maturity-levels.md`
 - `references/security.md`

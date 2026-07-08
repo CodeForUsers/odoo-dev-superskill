@@ -1,0 +1,81 @@
+{
+  "name": "odoo-dev-superskill",
+  "version": "1.1.1",
+  "description": "Expert guidelines, architectural templates, and automation tools for Odoo module development, migration, and quality audit.",
+  "compatibility": {
+    "odoo_versions": ["16.0", "17.0", "18.0", "19.0"],
+    "agents": ["claude-code", "antigravity", "cursor", "windsurf", "gemini-cli"]
+  },
+  "behavior_templates": {
+    "scaffold": {
+      "path": "references/agents/scaffold-behavior.md",
+      "trigger": "Creating Odoo modules or addon structures from scratch."
+    },
+    "migration": {
+      "path": "references/agents/migration-behavior.md",
+      "trigger": "Upgrading code between Odoo versions (e.g. 16.0 to 18.0), resolving deprecated API calls."
+    },
+    "security": {
+      "path": "references/agents/security-behavior.md",
+      "trigger": "Handling access rights, security groups, ir.model.access.csv, sudo bypasses, controllers security."
+    },
+    "xml_ui": {
+      "path": "references/agents/xml-ui-behavior.md",
+      "trigger": "Writing or modifying QWeb, OWL components, views (list/tree, form, kanban), XPath inheritance."
+    },
+    "connector": {
+      "path": "references/agents/connector-behavior.md",
+      "trigger": "Developing external APIs, marketplaces, sync connectors, import/export pipelines."
+    },
+    "review": {
+      "path": "references/agents/review-behavior.md",
+      "trigger": "Auditing Odoo code for anti-patterns, checking compliance with OCA standards."
+    },
+    "testing": {
+      "path": "references/agents/testing-behavior.md",
+      "trigger": "Writing backend Python tests (TransactionCase) or frontend tests (Hoot/QUnit/Tours)."
+    }
+  },
+  "automation_scripts": {
+    "detect_version": {
+      "path": "scripts/detect_odoo_version.py",
+      "args": [],
+      "description": "Autodetects target Odoo version from __manifest__.py or requirements.txt."
+    },
+    "scaffold": {
+      "path": "scripts/scaffold_module.py",
+      "args": ["--name", "--title", "--version", "--models", "--output"],
+      "description": "Generates a complete, OCA-compliant skeleton structure for a new Odoo module."
+    },
+    "autofix_xml": {
+      "path": "scripts/autofix_xml.py",
+      "args": ["--path", "--version"],
+      "description": "Auto-refactors deprecated XML view elements (e.g. converting attrs to invisible, <tree> to <list>)."
+    },
+    "validate_manifest": {
+      "path": "scripts/validate_manifest.py",
+      "args": ["--path", "--json"],
+      "description": "Verifies that __manifest__.py keys are properly structured and valid."
+    },
+    "check_anti_patterns": {
+      "path": "scripts/check_anti_patterns.py",
+      "args": ["--path", "--json"],
+      "description": "Scans Python/XML code for Odoo anti-patterns (e.g. cr.commit, naked excepts, SQL injection)."
+    },
+    "check_acls": {
+      "path": "scripts/check_acls.py",
+      "args": ["--path", "--json"],
+      "description": "Scans models directory and checks that every defined model has a security access rule."
+    },
+    "check_coverage": {
+      "path": "scripts/check_test_coverage.py",
+      "args": ["--path", "--json"],
+      "description": "Verifies if the module includes tests and checks basic code coverage indicators."
+    },
+    "validate_repo_consistency": {
+      "path": "scripts/validate_repo_consistency.py",
+      "args": [],
+      "description": "Verifies internal consistency of references and templates cataloged in docs."
+    }
+  }
+}

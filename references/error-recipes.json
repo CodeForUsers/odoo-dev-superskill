@@ -1,0 +1,108 @@
+{
+  "recipes": [
+    {
+      "pattern": "cr.commit()",
+      "error_code": "ERR_CR_COMMIT",
+      "description": "Direct database commit detected outside cron or migration scripts.",
+      "remediation": "Remove cr.commit() calls; Odoo's framework handles transaction management automatically. If this is a long-running wizard or script, consider chunking or OCA queue_job.",
+      "guide": "references/sql-performance.md",
+      "template": "templates/integrations/queue_job.py.tpl"
+    },
+    {
+      "pattern": "except:",
+      "error_code": "ERR_BARE_EXCEPT",
+      "description": "Naked or bare exception catching (except: pass) found.",
+      "remediation": "Catch specific exceptions (e.g., except UserError, except AccessError) and log errors using _logger.warning or _logger.error.",
+      "guide": "references/python-conventions.md",
+      "template": "templates/model_skeleton.py.tpl"
+    },
+    {
+      "pattern": "execute(.*%+.*)",
+      "error_code": "ERR_SQL_INJECTION",
+      "description": "Potential raw SQL query injection via string formatting.",
+      "remediation": "Never format queries with '%' or f-strings. Use parameterized syntax: cr.execute('SELECT * FROM table WHERE id = %s', (record_id,)). For Odoo 17.0+, use the SQL() wrapper.",
+      "guide": "references/sql-performance.md",
+      "template": "references/sql-performance.md"
+    },
+    {
+      "pattern": "\\._cr|\\._uid|\\._context",
+      "error_code": "ERR_DEPRECATED_RECORD_ATTR",
+      "description": "Use of deprecated record attributes (_cr, _uid, _context).",
+      "remediation": "Access transaction properties using environmental variables: use self.env.cr instead of self._cr, self.env.uid instead of self._uid, self.env.context instead of self._context.",
+      "guide": "references/python-conventions.md",
+      "template": "templates/model_skeleton.py.tpl"
+    },
+    {
+      "pattern": "<tree",
+      "error_code": "ERR_TREE_TAG_ODOO18",
+      "description": "Usage of <tree> tag in Odoo 18.0 or newer.",
+      "remediation": "Odoo 18 deprecated <tree> views in favor of <list>. Replace tag <tree> with <list> in XML file.",
+      "guide": "references/xml-conventions.md",
+      "template": "templates/views/list_view_18_19.xml.tpl"
+    },
+    {
+      "pattern": "name_get",
+      "error_code": "ERR_DEPRECATED_NAME_GET",
+      "description": "Usage of name_get() method which is deprecated in Odoo 17.0+.",
+      "remediation": "Override _compute_display_name() instead of name_get(). Set display_name field based on compute function.",
+      "guide": "references/orm-changelog-16-19.md",
+      "template": "templates/model_skeleton.py.tpl"
+    },
+    {
+      "pattern": "read_group",
+      "error_code": "ERR_DEPRECATED_READ_GROUP",
+      "description": "Usage of read_group() method which is deprecated in Odoo 18.0+.",
+      "remediation": "Override or call _read_group() instead of read_group(). Note that arguments and signature changed.",
+      "guide": "references/orm-changelog-16-19.md",
+      "template": "templates/model_skeleton.py.tpl"
+    },
+    {
+      "pattern": "Missing ACL",
+      "error_code": "ERR_MISSING_ACL",
+      "description": "Model is defined in Python but lacks access rules in security/ir.model.access.csv.",
+      "remediation": "Add an access rule for the model in security/ir.model.access.csv. Ensure correct model identifier prefixed with model_.",
+      "guide": "references/security.md",
+      "template": "templates/security/ir.model.access.csv.tpl"
+    },
+    {
+      "pattern": "No tests found",
+      "error_code": "ERR_MISSING_TESTS",
+      "description": "Module does not contain test cases.",
+      "remediation": "Create a tests/ directory and write at least one backend TransactionCase extending Odoo test cases.",
+      "guide": "references/testing.md",
+      "template": "templates/tests/test_transaction_case.py.tpl"
+    },
+    {
+      "pattern": "manifest",
+      "error_code": "ERR_INVALID_MANIFEST",
+      "description": "Manifest structure contains missing required keys or invalid schema.",
+      "remediation": "Ensure keys like 'name', 'version', 'category', 'license', and 'depends' are defined and syntax matches target Odoo version.",
+      "guide": "references/versioning-migrations.md",
+      "template": "templates/manifest/manifest_18.py.tpl"
+    },
+    {
+      "pattern": "@odoo/owl",
+      "error_code": "ERR_OWL_OLD_IMPORT",
+      "description": "Legacy OWL import statements detected (e.g., importing owl components via global namespaces in Odoo 17+).",
+      "remediation": "Import OWL components directly from active modular js scopes or native owl imports depending on the Odoo version: in Odoo 16+ use native OWL 2 class semantics.",
+      "guide": "references/owl-components.md",
+      "template": "templates/static/src/components/owl_component.js.tpl"
+    },
+    {
+      "pattern": "<template id=\"assets_backend\"",
+      "error_code": "ERR_LEGACY_ASSETS_XML",
+      "description": "JS/CSS assets declared in backend views (deprecated in Odoo 16.0+).",
+      "remediation": "Move all assets definitions (JS, SCSS, CSS) out of XML templates and declare them in the 'assets' dictionary key within the __manifest__.py file.",
+      "guide": "references/owl-components.md",
+      "template": "templates/manifest/manifest_18.py.tpl"
+    },
+    {
+      "pattern": "t-on-",
+      "error_code": "ERR_QWEB_OWL_SYNTAX",
+      "description": "Legacy event binding syntax in QWeb templates.",
+      "remediation": "In OWL 2 (Odoo 17+), ensure event bindings use correct OWL 2 syntax like t-on-click or similar directly on the target component element.",
+      "guide": "references/owl-components.md",
+      "template": "templates/static/src/components/owl_component.xml.tpl"
+    }
+  ]
+}

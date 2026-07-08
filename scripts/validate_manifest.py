@@ -226,8 +226,21 @@ class ManifestValidator:
                 "but should be explicit."
             )
 
-    def print_report(self):
+    def print_report(self, json_output=False):
         """Print the validation report."""
+        if json_output:
+            import json
+            print(json.dumps({
+                "errors": self.errors,
+                "warnings": self.warnings,
+                "summary": {
+                    "errors": len(self.errors),
+                    "warnings": len(self.warnings),
+                    "success": len(self.errors) == 0
+                }
+            }, indent=2))
+            return
+
         module_name = os.path.basename(self.module_path)
         print(f"\n{'=' * 60}")
         print(f"Manifest Validation Report: {module_name}")
@@ -256,11 +269,24 @@ class ManifestValidator:
 
 def main():
     """Main entry point."""
-    path = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
+    path = os.getcwd()
+    json_output = False
+
+    args = sys.argv[1:]
+    i = 0
+    while i < len(args):
+        if args[i] == "--json":
+            json_output = True
+            i += 1
+        elif not args[i].startswith("-"):
+            path = args[i]
+            i += 1
+        else:
+            i += 1
 
     validator = ManifestValidator(path)
     success = validator.validate()
-    validator.print_report()
+    validator.print_report(json_output=json_output)
 
     sys.exit(0 if success else 1)
 
