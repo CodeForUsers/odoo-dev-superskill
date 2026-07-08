@@ -1,7 +1,5 @@
 # odoo-dev-superskill
 
-![Banner Header](references/images/banner-header.png)
-
 **Odoo Module Development Skill for AI Agents (16.0–19.0)**
 
 ![Version](https://img.shields.io/badge/Odoo-16.0%20%7C%2017.0%20%7C%2018.0%20%7C%2019.0-714B67?style=for-the-badge&logo=odoo&logoColor=white)
@@ -68,7 +66,6 @@ odoo-dev-superskill/
 │   │   ├── review-behavior.md        # Code review behavior
 │   │   └── testing-behavior.md       # Testing & QA behavior
 │   ├── images/                       # Screen and terminal mockups
-│   │   ├── banner-header.png         # Project repository banner image
 │   │   └── terminal-mockup.png       # CLI execution mockup image
 │   ├── backend-rules.md              # Python conventions, SQL security, and performance
 │   ├── cheatsheet-agent.md           # Compact token-efficient agent cheatsheet
