@@ -4,7 +4,7 @@
   "description": "Odoo Module Development Skill for AI Agents (16.0–20.0)",
   "main": "bin/install.js",
   "bin": {
-    "odoo-dev-superskill": "./bin/install.js"
+    "odoo-dev-superskill": "bin/install.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
