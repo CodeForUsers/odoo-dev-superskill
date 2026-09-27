@@ -15,22 +15,26 @@ Define how the agent should behave when reviewing an existing Odoo module for qu
 - Determine whether the review should focus on bugs, architecture, style, or OCA compliance.
 - Check if the module has tests and documentation.
 
-## Workflow
-1. Review structure first.
-2. Review security and access model.
-3. Review models and business logic.
-4. Review XML/UI consistency.
-5. Review connectors/integrations if present.
-6. Review tests, linting, and maintainability.
-7. Present findings by severity: critical, important, optional.
-8. Suggest concrete improvements, not vague opinions.
+## Workflow (2-Pass Review Model)
+1. **Pass 1 — House Rules & Baseline Compliance**:
+   - Manifest & structure (`__manifest__.py`, dependencies, license, clean file layout).
+   - Security floor: verify every model in `ir.model.access.csv`, multi-company `ir.rule`, sweep for unnecessary `sudo()` or raw SQL formatting.
+   - Backend rules: attribute ordering, `self.env._(...)` translations with kwargs, plain ASCII punctuation, `odoo.fields.Domain`.
+   - Frontend/UI rules: `<list>` tags (18.0 - 20.0), `id` before `model` in `<record>`, no fragile positional XPaths.
+   - Web framework: feature-based organization, no component getters, no fragile JS patching.
+2. **Pass 2 — Merit & Architectural Judgement (Sceptical Colleague Pass)**:
+   - Does this change solve the business problem cleanly without side effects?
+   - Is performance scalable (batch operations vs O(N) loop ORM queries)?
+   - Are edge cases handled (empty recordsets, concurrency, multi-company)?
+   - Do tests assert behavior rather than implementation details?
+3. **Report findings by severity**: Blocker (Must Fix), Warning (Should Improve), Optimization/Polish (Optional).
 
 ## Rules
-- Prioritize correctness and maintainability over style nitpicks.
+- Prioritize correctness, security, and maintainability over style nitpicks.
 - Distinguish blockers from polish.
 - Tie every recommendation to a specific risk or benefit.
 - Be explicit when something is uncertain.
-- Prefer actionable review output.
+- Prefer actionable review output with concrete diffs.
 
 ## Avoid
 - Generic praise with no technical value.
@@ -44,7 +48,8 @@ Define how the agent should behave when reviewing an existing Odoo module for qu
 - **Engram**: Retrieve past review findings or conventions using `mem_search` before starting the audit. Record any significant new architectural decisions or custom coding constraints identified during review using `mem_save`.
 
 ## Related references
-- `references/maturity-levels.md`
-- `references/security.md`
-- `references/sql-performance.md`
+- `references/backend-rules.md`
+- `references/frontend-ui-rules.md`
+- `references/migrations-and-versions.md`
 - `references/testing.md`
+- `references/maturity-levels.md`

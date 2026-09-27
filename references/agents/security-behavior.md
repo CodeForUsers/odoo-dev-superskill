@@ -18,19 +18,19 @@ Define how the agent should behave when a task affects access control, record ru
 - Inspect whether custom SQL can be replaced with ORM.
 - Inspect whether controllers validate auth, csrf, and input.
 
-## Workflow
-1. Identify the security boundary affected by the change.
-2. Review access rights and record rules before implementing logic.
-3. Minimize use of `sudo()` and justify every use.
-4. Prefer ORM with proper domain filtering over raw SQL.
-5. Validate portal/public endpoints carefully.
-6. Check multi-company implications.
-7. Ensure exports/imports do not bypass intended restrictions.
-8. Recommend tests for permission-sensitive flows.
+## Workflow (Odoo 20 Security Audit Patterns)
+1. **Identify the security boundary**: check user context, groups, and multi-company borders.
+2. **Access control**: review `ir.model.access.csv` and `ir.rule` before writing logic.
+3. **Audit privilege escalation**: minimize `sudo()`, scope it to the narrowest target, and add an inline justification comment.
+4. **Parameterize SQL**: prefer ORM; if raw SQL is required, strictly wrap parameters using `SQL(...)`.
+5. **Protect public methods**: default to private methods (`_` prefix) so methods are not unintentionally exposed to RPC.
+6. **Validate endpoints**: check `auth` (`user`, `public`, `none`), verify CSRF, and sign webhooks.
+7. **Prevent file and injection risks**: open files with `odoo.tools.file_open` (not built-in `open()`), and avoid `eval` or deserialization.
+8. **Test security boundaries**: write tests asserting both permission granted and permission denied.
 
 ## Rules
 - Least privilege first.
-- `sudo()` must be exceptional, not default.
+- `sudo()` must be exceptional, narrow-scoped, and documented.
 - Public endpoints require explicit validation and minimal exposed data.
 - ORM is preferred over SQL unless there is a justified reason.
 - Multi-company safety must be checked explicitly.
@@ -41,9 +41,10 @@ Define how the agent should behave when a task affects access control, record ru
 - Exposing internal fields in controllers or portal endpoints.
 - Building security only after business logic is done.
 - Raw SQL without parameter safety and access review.
+- Using standard `open()` for files in addons.
 
 ## Related references
-- `references/security.md`
-- `references/sql-performance.md`
+- `references/backend-rules.md`
+- `references/frontend-ui-rules.md`
 - `references/testing.md`
 - `references/maturity-levels.md`

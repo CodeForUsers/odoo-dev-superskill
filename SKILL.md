@@ -2,23 +2,23 @@
 name: odoo-dev-superskill
 description: >
   Expert guide for creating, reviewing, refactoring, and migrating Odoo modules
-  in versions 16.0, 17.0, 18.0, and 19.0, strictly following OCA Guidelines.
-  Use it when the user mentions: creating an Odoo module, inheriting models or
-  views, writing security (ACL/ir.rule), migrating between Odoo versions
-  (e.g., 16 to 18, 17 to 19), fixing tree/list view errors, reviewing Odoo code
-  for anti-patterns, or developing e-commerce connectors (Amazon, eBay,
-  WooCommerce, Mirakl, Temu) on Odoo. Also applies if the user pastes code with
-  models.Model, _inherit, fields.Many2one, <tree>, <list>, or a __manifest__.py,
-  without mentioning the word Odoo explicitly.
+  in versions 16.0, 17.0, 18.0, 19.0, and 20.0, strictly following OCA Guidelines
+  and Odoo 20 official house rules. Use it when the user mentions: creating an Odoo
+  module, inheriting models or views, writing security (ACL/ir.rule), migrating between
+  Odoo versions (e.g., 16 to 18, 18 to 20), fixing tree/list view errors, reviewing Odoo
+  code for anti-patterns, or developing e-commerce connectors (Amazon, eBay, WooCommerce,
+  Mirakl, Temu). Also applies if the user pastes code with models.Model, _inherit,
+  fields.Many2one, <tree>, <list>, or a __manifest__.py, without mentioning Odoo explicitly.
 license: MIT
-version: 1.1.1
+version: 1.2.0
 compatibility: ["claude-code", "antigravity", "cursor", "windsurf", "codex-cli", "gemini-cli"]
 ---
 
-# odoo-dev-superskill — Odoo Development Skill (16.0–19.0)
+# odoo-dev-superskill — Odoo Development Skill (16.0–20.0)
 
 An expert skill enabling AI agents to generate, review, refactor, and migrate
-Odoo modules from version 16.0 to 19.x, adhering to OCA Guidelines.
+Odoo modules from version 16.0 to 20.x, adhering to OCA Guidelines and Odoo 20
+official house rules.
 
 ---
 
@@ -29,16 +29,17 @@ Odoo modules from version 16.0 to 19.x, adhering to OCA Guidelines.
 ### Detection Strategy
 
 1. **Search for `__manifest__.py`** in the module directory. Extract the
-   `MAJOR.MINOR` prefix from the `version` key (e.g., `18.0.1.2.0` → `18.0`).
-2. If there is no manifest, check `requirements.txt` looking for `odoo>=18` or similar.
+   `MAJOR.MINOR` prefix from the `version` key (e.g., `20.0.1.0.0` → `20.0`).
+2. If there is no manifest, check `requirements.txt` looking for `odoo>=18`, `odoo>=20`, or similar.
 3. Run `scripts/detect_odoo_version.py` to automate the above steps.
 4. **If there are no clues**, explicitly ask the user:
-   > "Which Odoo version are you developing for? (16.0 / 17.0 / 18.0 / 19.0)"
+   > "Which Odoo version are you developing for? (16.0 / 17.0 / 18.0 / 19.0 / 20.0)"
 
 The detected version determines:
-- The list view tag (`<tree>` in 16/17, `<list>` in 18/19).
+- The list view tag (`<tree>` in 16/17, `<list>` in 18/19/20).
 - Which ORM methods to use and which are deprecated.
 - The frontend testing framework (QUnit vs Hoot).
+- Domain syntax (`odoo.fields.Domain` vs legacy prefix domains).
 
 Check `references/migrations-and-versions.md` for the full breakdown of differences.
 
@@ -69,40 +70,50 @@ These rules govern Odoo module development. They are classified by urgency level
 3. **Always define ACLs** (`ir.model.access.csv`) for every new model.
 4. **Never execute raw SQL** without parameterization — use `cr.execute(query, params)` or `SQL()` (17+).
 5. **Prefix XML IDs** with the technical module name: `<module_name>.view_<model>_form`.
+6. **In `<record>` tags, place `id` before `model`** (Odoo 20 house standard).
 
 ### Recommended (Best Practices)
-6. **Respect the OCA order** of attributes in model classes (see `references/backend-rules.md`).
-7. **One model per Python file**, except for very small auxiliary models.
-8. **Include tests** — minimum one `TransactionCase` per model with basic CRUD operations.
-9. **Document with OCA README** — use the structure from `templates/readme_structure/`.
-10. **Version correctly** — format `MAJOR.MINOR.PATCH.BUILD` tied to the Odoo version.
+7. **Respect the attribute order** in model classes (see `references/backend-rules.md`).
+8. **One model per Python file**, except for very small auxiliary models.
+9. **Include tests** — minimum one `TransactionCase` per model with basic CRUD operations.
+10. **Document with OCA README** — use the structure from `templates/readme_structure/`.
+11. **Version correctly** — format `MAJOR.MINOR.PATCH.BUILD` tied to the Odoo version (e.g. `20.0.1.0.0`).
+12. **Static literals for translations** — use `self.env._(...)` with kwargs or `%s`, and plain ASCII punctuation.
 
 ---
 
 ## 4. Key Differences by Version
 
-| Version | List View Tag | Conditional UI | Key ORM Change | Frontend |
-|---------|---------------|----------------|----------------|----------|
-| 16.0 | `<tree>` | `attrs="{...}"` | Improvements in `read_group` | OWL 1/2 transition |
-| 17.0 | `<tree>` | `invisible="..."` | Secure `SQL()` wrapper | OWL 2 consolidated |
-| 18.0 | `<list>` (**breaking**) | `invisible="..."` | `_read_group` replaces `read_group` | Hoot replaces QUnit |
-| 19.0 | `<list>` | `invisible="..."` | `_search_display_name`, GROUPING SETS | OWL 2 continuity |
+| Version | List View Tag | Conditional UI | Key ORM Change | Frontend | Runtime |
+|---------|---------------|----------------|----------------|----------|---------|
+| 16.0 | `<tree>` | `attrs="{...}"` | Improvements in `read_group` | OWL 1/2 transition | Python 3.10+ |
+| 17.0 | `<tree>` | `invisible="..."` | Secure `SQL()` wrapper | OWL 2 consolidated | Python 3.10+ |
+| 18.0 | `<list>` (**breaking**) | `invisible="..."` | `_read_group` replaces `read_group` | Hoot replaces QUnit | Python 3.10+ |
+| 19.0 | `<list>` | `invisible="..."` | `_search_display_name`, GROUPING SETS | OWL 2 continuity | Python 3.11+ |
+| 20.0 | `<list>` | `invisible="..."` | `odoo.fields.Domain`, `self.env._`, `SQL()` | OWL 2 (by feature), Hoot | Python 3.11–3.13 |
 
 > **Golden Rule**: Before generating any view, check this table and use
 > `<tree>` or `<list>` according to the target version. **Never assume a default.**
 
 For full details on each version, check `references/migrations-and-versions.md`.
 
+### Synergy with Odoo 20 Native Repo Skills
+In Odoo 20, official agent skills are distributed directly in the core repository (`skills/odoo-guidelines`, `skills/odoo-review`, `skills/odoo-security`, `skills/odoo-web-guidelines`) following the `agentskills.io` standard. `odoo-dev-superskill` fully incorporates these house rules while expanding them with:
+- **OCA Multi-version standards** across versions 16.0 through 20.0.
+- **Automated Scaffolding & Migration tooling** (`auto_migrate_full.py`, `scaffold_module.py`).
+- **AST quality inspection & autofixers** (`check_anti_patterns.py`, `autofix_xml.py`).
+- **E-commerce & marketplace connector architectures** (Amazon, eBay, Mirakl, Temu).
+
 ### Target Version Examples (Few-Shot Reasoning)
-* **Example 1 (New Module v18.0+)**:
-  * *Request*: "Create a new Odoo 18.0 module with a list view."
-  * *Action*: Generate the list view using the `<list>` tag instead of `<tree>`.
-* **Example 2 (XML View Migration to v17.0+)**:
-  * *Request*: "Migrate this view with `attrs="{'invisible': [('state', '=', 'draft')]}"` to Odoo 17."
-  * *Action*: Refactor the conditional visibility to `invisible="state == 'draft'"`.
+* **Example 1 (New Module v20.0)**:
+  * *Request*: "Create a new Odoo 20.0 module with a list view."
+  * *Action*: Generate the list view using the `<list>` tag instead of `<tree>`, place `id` before `model` in `<record>`, and use `20.0.1.0.0` manifest.
+* **Example 2 (XML View Migration to v18.0+)**:
+  * *Request*: "Migrate this view with `attrs="{'invisible': [('state', '=', 'draft')]}"` and `<tree>` to Odoo 20."
+  * *Action*: Refactor `<tree>` to `<list>`, and conditional visibility to `invisible="state == 'draft'"`.
 * **Example 3 (Ambiguous version context)**:
   * *Request*: "Generate model logic for this addon." (No manifest exists, no version specified).
-  * *Action*: Run `detect_odoo_version.py` first. If the version is still undetermined, ask: *"Which Odoo version are you developing for? (16.0 / 17.0 / 18.0 / 19.0)"*.
+  * *Action*: Run `detect_odoo_version.py` first. If the version is still undetermined, ask: *"Which Odoo version are you developing for? (16.0 / 17.0 / 18.0 / 19.0 / 20.0)"*.
 
 ---
 

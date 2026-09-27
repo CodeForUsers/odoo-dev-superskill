@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Auto-refactor XML files for modern Odoo versions (17.0, 18.0).
+"""Auto-refactor XML files for modern Odoo versions (17.0 - 20.0).
 
-This script performs "black magic" to automatically upgrade legacy XML syntax
-to the modern syntax required by Odoo 17.0+ and 18.0+.
+This script automatically refactors legacy XML syntax to the modern syntax
+required by Odoo 17.0+, 18.0+, 19.0, and 20.0.
 
 Features:
 - Converts `<tree>` to `<list>` (required in 18.0+).
@@ -139,7 +139,7 @@ def process_file(filepath, target_version):
 
 def main():
     parser = argparse.ArgumentParser(description="Auto-refactor Odoo XML files.")
-    parser.add_argument("--version", required=True, choices=["17.0", "18.0", "19.0"],
+    parser.add_argument("--version", required=True, choices=["17.0", "18.0", "19.0", "20.0"],
                         help="Target Odoo version")
     parser.add_argument("path", nargs="?", default=os.getcwd(), 
                         help="Path to the Odoo module (default: current dir)")

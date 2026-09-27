@@ -1,12 +1,12 @@
 # odoo-dev-superskill
 
-**Odoo Module Development Skill for AI Agents (16.0–19.0)**
+**Odoo Module Development Skill for AI Agents (16.0–20.0)**
 
-![Version](https://img.shields.io/badge/Odoo-16.0%20%7C%2017.0%20%7C%2018.0%20%7C%2019.0-714B67?style=for-the-badge&logo=odoo&logoColor=white)
+![Version](https://img.shields.io/badge/Odoo-16.0%20%7C%2017.0%20%7C%2018.0%20%7C%2019.0%20%7C%2020.0-714B67?style=for-the-badge&logo=odoo&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)
 [![skills.sh](https://skills.sh/b/CodeForUsers/odoo-dev-superskill)](https://skills.sh/CodeForUsers/odoo-dev-superskill)
 
-A comprehensive AI agent skill providing scaffolding, refactoring tools, and architecture templates for Odoo module development. Enforces Odoo Community Association (OCA) coding standards and security guidelines across Odoo versions 16.0 through 19.0.
+A comprehensive AI agent skill providing scaffolding, refactoring tools, and architecture templates for Odoo module development. Enforces Odoo Community Association (OCA) coding standards, Odoo 20 official house rules, and security guidelines across Odoo versions 16.0 through 20.0.
 
 ## Table of Contents
 - [Features](#features)
@@ -14,6 +14,7 @@ A comprehensive AI agent skill providing scaffolding, refactoring tools, and arc
 - [Repository Structure](#repository-structure)
 - [Usage](#usage)
 - [Behavior Templates](#behavior-templates)
+- [Odoo 20 Support & Official Skills Synergy](#odoo-20-support--official-skills-synergy)
 - [Optional Agent Tooling](#optional-agent-tooling-codegraph--engram)
 - [Key Version Differences](#key-version-differences)
 - [Coverage & Limitations](#coverage--limitations)
@@ -158,6 +159,20 @@ The skill includes specialized behavior templates that AI agents load on demand 
 
 Templates can be combined when a task spans multiple areas (e.g., a migration that also changes XML views).
 
+## Odoo 20 Support & Official Skills Synergy
+
+Starting with Odoo 20.0, the core [odoo/odoo](https://github.com/odoo/odoo) repository ships native agent skills under `skills/` following the [agentskills.io](https://agentskills.io) specification:
+- `odoo-guidelines`: Official house rules for manifests, models, fields, ORM, controllers, XML, and tests.
+- `odoo-review`: Two-pass code review workflow (House rules baseline pass + Sceptical colleague pass).
+- `odoo-security`: Security sweeps covering `sudo()` escalation, `SQL(...)` parameters, domain injection, and routes.
+- `odoo-web-guidelines`: Frontend architecture rules (organizing by feature, avoiding getters, Hoot test standards).
+
+`odoo-dev-superskill` acts as an **overarching Super-Skill and Framework** that completely aligns with these official Odoo 20 house rules while adding:
+1. **Multi-Version Backward & Forward Compatibility**: Seamless bridging across versions 16.0, 17.0, 18.0, 19.0, and 20.0.
+2. **Automated Migration Suite**: OpenUpgrade script scaffolding, automated pattern replacement, and branch commit porting via `oca-port`.
+3. **AST Quality Enforcement**: Ready-to-run verification scripts (`check_anti_patterns.py`, `check_acls.py`, `autofix_xml.py`).
+4. **OCA Architecture Boilerplates**: E-commerce connectors (Amazon, eBay, Mirakl, Temu), Queue Jobs, and REST API controller templates.
+
 ## Optional Agent Tooling (Codegraph & Engram)
 
 If `codegraph` or `engram` servers are active in your local agent MCP environment, agents can optionally leverage them to enhance efficiency:
@@ -166,13 +181,14 @@ If `codegraph` or `engram` servers are active in your local agent MCP environmen
 
 ## Key Version Differences
 
-| Feature | 16.0 | 17.0 | 18.0 | 19.0 |
-|---------|------|------|------|------|
-| **List View Tag** | `<tree>` | `<tree>` | `<list>` * | `<list>` |
-| **Conditional UI** | `attrs="{...}"` | `invisible="..."` | `invisible="..."` | `invisible="..."` |
-| **ORM read_group** | `read_group()` | `read_group()` | `_read_group()` * | `_read_group()` |
-| **Frontend Tests** | QUnit | QUnit | Hoot * | Hoot |
-| **SQL Wrapper** | N/A | `SQL()` class | `SQL()` class | `SQL()` class |
+| Feature | 16.0 | 17.0 | 18.0 | 19.0 | 20.0 |
+|---------|------|------|------|------|------|
+| **List View Tag** | `<tree>` | `<tree>` | `<list>` * | `<list>` | `<list>` |
+| **Conditional UI** | `attrs="{...}"` | `invisible="..."` | `invisible="..."` | `invisible="..."` | `invisible="..."` |
+| **ORM / Domains** | `read_group()` | `read_group()` | `_read_group()` * | `_search_display_name` | `odoo.fields.Domain` * |
+| **Frontend Tests** | QUnit | QUnit | Hoot * | Hoot | Hoot (by feature) |
+| **SQL Wrapper** | N/A | `SQL()` class | `SQL()` class | `SQL()` class | `SQL()` class |
+| **Runtime Support** | Python 3.10+ | Python 3.10+ | Python 3.10+ | Python 3.11+ | Python 3.11–3.13 |
 
 *\* Indicates a breaking change introduced in this version.*
 

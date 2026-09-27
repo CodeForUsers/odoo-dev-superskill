@@ -150,17 +150,17 @@ class AntiPatternChecker:
                 if re.search(r'\bself\._cr\b', stripped):
                     self._add_finding(
                         filepath, i, "WARNING",
-                        "self._cr is deprecated in 19.0. Use self.env.cr instead."
+                        "self._cr is deprecated in 19.0+. Use self.env.cr instead."
                     )
                 if re.search(r'\bself\._uid\b', stripped):
                     self._add_finding(
                         filepath, i, "WARNING",
-                        "self._uid is deprecated in 19.0. Use self.env.uid instead."
+                        "self._uid is deprecated in 19.0+. Use self.env.uid instead."
                     )
                 if re.search(r'\bself\._context\b', stripped):
                     self._add_finding(
                         filepath, i, "WARNING",
-                        "self._context is deprecated in 19.0. "
+                        "self._context is deprecated in 19.0+. "
                         "Use self.env.context instead."
                     )
 
@@ -182,7 +182,24 @@ class AntiPatternChecker:
                         "Use _read_group() or formatted_read_group() instead."
                     )
 
-            # 8. Using sudo() without apparent reason
+            # 8. Deprecated expression.AND/OR in Odoo 20.0+
+            if self.odoo_version and self.odoo_version >= "20.0":
+                if re.search(r'\bexpression\.(?:AND|OR)\b', stripped):
+                    self._add_finding(
+                        filepath, i, "WARNING",
+                        "expression.AND/OR is deprecated in Odoo 20.0+. "
+                        "Use odoo.fields.Domain.AND / Domain.OR instead."
+                    )
+
+            # 9. Dynamic string formatting in translations _(...)
+            if re.search(r'\b(?:self\.env\._|_)\s*\(\s*f["\']', stripped) or re.search(r'\b(?:self\.env\._|_)\s*\([^)]*%\s*[^)]*\)', stripped):
+                self._add_finding(
+                    filepath, i, "WARNING",
+                    "Dynamic string formatting inside translation call _(...). "
+                    "Translate only static literals; pass dynamic parameters as arguments."
+                )
+
+            # 10. Using sudo() without apparent reason
             sudo_count = stripped.count(".sudo()")
             if sudo_count > 1:
                 self._add_finding(

@@ -42,7 +42,7 @@ from datetime import date
 
 # ─── Configuration ────────────────────────────────────────────────────────────
 
-SUPPORTED_VERSIONS = {"16.0", "17.0", "18.0", "19.0"}
+SUPPORTED_VERSIONS = {"16.0", "17.0", "18.0", "19.0", "20.0"}
 CURRENT_YEAR = date.today().year
 
 # ─── Template Strings ─────────────────────────────────────────────────────────
@@ -332,7 +332,7 @@ def scaffold_module(module_name, module_title, odoo_version, models, output_dir,
     print(f"\n🚀 Scaffolding module '{module_name}' (Odoo {odoo_version})...")
     print(f"   Output: {base}\n")
 
-    use_list = odoo_version in ("18.0", "19.0")
+    use_list = odoo_version in ("18.0", "19.0", "20.0")
     view_tag = "list" if use_list else "tree"
     views_template = VIEWS_TEMPLATE_18 if use_list else VIEWS_TEMPLATE_16_17
 

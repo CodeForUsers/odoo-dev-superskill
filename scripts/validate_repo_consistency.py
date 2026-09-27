@@ -12,6 +12,11 @@ import sys
 def main():
     repo_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     docs_to_check = ['README.md', 'SKILL.md']
+    agents_dir = os.path.join(repo_dir, 'references', 'agents')
+    if os.path.isdir(agents_dir):
+        for f in sorted(os.listdir(agents_dir)):
+            if f.endswith('.md'):
+                docs_to_check.append(os.path.join('references', 'agents', f))
     
     missing_files = []
     checked_count = 0

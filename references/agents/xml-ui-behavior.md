@@ -29,8 +29,10 @@ Define how the agent should behave when working with XML views, XPath inheritanc
 
 ## Rules
 - Never modify XML blindly without understanding inheritance context.
-- Use version-correct syntax for list/tree and visibility logic.
-- Prefer stable XPath anchors over fragile positional selectors.
+- Use version-correct syntax for list views: `<tree>` in 16/17, `<list>` in 18/19/20.
+- In `<record>` tags, always place `id` before `model`.
+- Prefer stable XPath anchors based on field names (`field[@name='...']`) over fragile positional selectors (`//group[2]/field[3]`).
+- For web assets, organize by feature (folder with JS component, QWeb XML, and SCSS) rather than splitting by type.
 - Keep UI logic readable and maintainable.
 - Distinguish between presentation logic and business logic.
 
@@ -38,11 +40,11 @@ Define how the agent should behave when working with XML views, XPath inheritanc
 - Fragile XPath expressions tied to positions only.
 - Duplicating large inherited views when small XPath patches are enough.
 - Mixing QWeb, backend view XML, and OWL concerns without separation.
-- Carrying deprecated syntax into newer versions.
+- Carrying deprecated syntax (`attrs`, `<tree>`) into newer versions (18.0 - 20.0).
 - Solving backend problems only in the view layer.
 
 ## Related references
-- `references/version-matrix.md`
-- `references/orm-changelog-16-19.md`
-- `references/security.md`
-- `references/sql-performance.md`
+- `references/frontend-ui-rules.md`
+- `references/migrations-and-versions.md`
+- `references/backend-rules.md`
+- `references/testing.md`

@@ -1,6 +1,6 @@
 # Testing — Odoo OCA Development
 
-Testing guide for Odoo modules (16.0–19.0).
+Testing guide for Odoo modules (16.0–20.0).
 
 ---
 
@@ -13,7 +13,7 @@ tests/
 ├── test_sale_order_line.py     # sale.order.line model tests
 ├── test_controller.py          # HTTP controller tests
 └── test_js/                    # Frontend tests (if applicable)
-    └── test_widget.js          # QUnit (16/17) or Hoot (18/19)
+    └── test_widget.js          # QUnit (16/17) or Hoot (18/19/20)
 ```
 
 ```python
@@ -244,9 +244,9 @@ QUnit.module("my_module", (hooks) => {
 });
 ```
 
-### Odoo 18.0 / 19.0: Hoot
+### Odoo 18.0 / 19.0 / 20.0: Hoot
 
-Starting from Odoo 18.0, the frontend testing framework migrates from **QUnit to Hoot**.
+Starting from Odoo 18.0 (and continuing in 19.0 and 20.0), the frontend testing framework is **Hoot**.
 
 ```javascript
 /** @odoo-module **/

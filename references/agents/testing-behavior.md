@@ -40,5 +40,6 @@ Define how the agent should behave when a task involves tests, validation strate
 
 ## Related references
 - `references/testing.md`
+- `references/migrations-and-versions.md`
+- `references/backend-rules.md`
 - `references/maturity-levels.md`
-- `references/version-matrix.md`

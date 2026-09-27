@@ -42,7 +42,8 @@ Define how the agent should behave when creating a new Odoo module or scaffoldin
 - Creating oversized modules when the feature should be an extension of an existing addon.
 
 ## Related references
-- `references/version-matrix.md`
+- `references/migrations-and-versions.md`
+- `references/backend-rules.md`
+- `references/frontend-ui-rules.md`
 - `references/maturity-levels.md`
-- `references/security.md`
-- `references/sql-performance.md`
+- `references/testing.md`

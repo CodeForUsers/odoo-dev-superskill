@@ -1,9 +1,9 @@
 {
   "name": "odoo-dev-superskill",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Expert guidelines, architectural templates, and automation tools for Odoo module development, migration, and quality audit.",
   "compatibility": {
-    "odoo_versions": ["16.0", "17.0", "18.0", "19.0"],
+    "odoo_versions": ["16.0", "17.0", "18.0", "19.0", "20.0"],
     "agents": ["claude-code", "antigravity", "cursor", "windsurf", "gemini-cli"]
   },
   "behavior_templates": {

@@ -1,4 +1,4 @@
-# Backend Development Rules & Guidelines (Odoo v16.0 - v19.0)
+# Backend Development Rules & Guidelines (Odoo v16.0 - v20.0)
 
 This guide consolidates all Python conventions, database performance patterns, and security guidelines for Odoo module development.
 
@@ -18,7 +18,11 @@ class SaleOrderLine(models.Model):
     _order = "sequence, id"
     _rec_name = "display_name"
 
-    # --- 2. Fields (in order: default, related, compute, store) ---
+    # --- 2. Default methods ---
+    def _default_company_id(self):
+        return self.env.company
+
+    # --- 3. Fields (in order: default, related, compute, store) ---
     name = fields.Char(string="Description", required=True)
     sequence = fields.Integer(default=10)
     order_id = fields.Many2one("sale.order", required=True, ondelete="cascade")
@@ -28,36 +32,36 @@ class SaleOrderLine(models.Model):
     price_subtotal = fields.Float(string="Subtotal", compute="_compute_price_subtotal", store=True)
     state = fields.Selection(related="order_id.state", string="Order Status", store=True)
 
-    # --- 3. SQL Constraints ---
+    # --- 4. Constraints and Indexes (Odoo 18.0 - 20.0) ---
+    # _sql_constraints is legacy/compatible; modern versions also allow models.Constraint / models.Index
     _sql_constraints = [
         ("positive_quantity", "CHECK(quantity > 0)", "Quantity must be positive."),
     ]
 
-    # --- 4. Default methods ---
-    def _default_company_id(self):
-        return self.env.company
-
-    # --- 5. Compute methods ---
+    # --- 5. Compute, inverse, and search methods (in field order) ---
     @api.depends("quantity", "price_unit")
     def _compute_price_subtotal(self):
         for line in self:
             line.price_subtotal = line.quantity * line.price_unit
 
-    # --- 6. Onchange methods ---
+    # --- 6. Selection methods ---
+    # def _selection_target_state(self): ...
+
+    # --- 7. Onchange methods ---
     @api.onchange("product_id")
     def _onchange_product_id(self):
         if self.product_id:
             self.name = self.product_id.display_name
             self.price_unit = self.product_id.list_price
 
-    # --- 7. Constrains methods ---
+    # --- 8. Constrains methods ---
     @api.constrains("quantity")
     def _check_quantity(self):
         for line in self:
             if line.quantity <= 0:
-                raise ValidationError(_("Quantity must be positive."))
+                raise ValidationError(self.env._("Quantity must be positive."))
 
-    # --- 8. CRUD methods ---
+    # --- 9. CRUD overrides ---
     @api.model_create_multi
     def create(self, vals_list):
         return super().create(vals_list)
@@ -68,20 +72,58 @@ class SaleOrderLine(models.Model):
     def unlink(self):
         return super().unlink()
 
-    # --- 9. Action methods (buttons) ---
+    # --- 10. Action methods (buttons) ---
     def action_confirm(self):
         self.ensure_one()
         return True
 
-    # --- 10. Private / Business methods ---
+    # --- 11. Business / Private methods ---
     def _prepare_invoice_line(self):
         self.ensure_one()
         return {}
 ```
 
+### Domain Construction (`odoo.fields.Domain`)
+In modern Odoo (18.0 - 20.0), combine domains using `odoo.fields.Domain`:
+* Use operators `&`, `|`, `~` for inline domain logic.
+* Use `Domain.AND` and `Domain.OR` when combining lists of existing domains.
+* **Never** hand-craft `'&'` or `'|'` prefix lists manually unless working in raw XML.
+* **Never** use `expression.AND` / `expression.OR` (deprecated).
+
+```python
+from odoo.fields import Domain
+
+# ✅ Modern Domain composition
+domain = Domain([("state", "=", "sale")]) & Domain([("partner_id", "=", partner.id)])
+```
+
+### Translations & User-Facing Strings (`self.env._`)
+Translate only **static literals**, passing dynamic variables as arguments:
+* Current API in model code: `self.env._(...)`.
+* Pass keyword arguments for named formatting: `self.env._("%(count)s records", count=len(records))`.
+* **Never** format inside `_()` (e.g. `_("Text %s" % val)` or `_(f"Text {val}")`).
+* **Never** call `_()` at class or module level; use `odoo.tools.translate.LazyTranslate` (`_lt`) if a module-level constant is required.
+
+### Plain ASCII Punctuation in Messages & Comments
+* Follow the Odoo 20 guideline: comments, docstrings, commit messages, and translated messages must use **plain ASCII punctuation only**.
+* Replace em dashes (`—`) with hyphens, commas, or colons.
+* Replace curly quotes (`“ ”`) with standard quotes (`" '`).
+* Replace ellipsis character (`…`) with `...`.
+
+### Safe File Opening
+* Always open addon files using `odoo.tools.file_open` instead of standard Python `open()`.
+* `file_open` resolves paths within addons securely and prevents path-traversal vulnerabilities.
+
+```python
+from odoo.tools import file_open
+
+with file_open("my_module/data/template.json", "rb") as f:
+    data = f.read()
+```
+
 ### Exception Handling & Logging
 * **Never** use bare `except: pass` or `except Exception: pass`. Catch specific exceptions and log properly.
-* **Always** use `_` for user-facing exceptions (e.g. `UserError`, `ValidationError`).
+* **Always** use `_` or `self.env._` for user-facing exceptions (e.g. `UserError`, `ValidationError`).
 
 ```python
 import logging
@@ -94,18 +136,18 @@ except ValidationError:
     raise  # Re-raise validation errors
 except Exception as e:
     _logger.exception("Error processing record %s", self.id)
-    raise UserError(_("An error occurred. Please contact support.")) from e
+    raise UserError(self.env._("An error occurred. Please contact support.")) from e
 ```
 
 ### Import Ordering (PEP 8 + OCA)
 1. Standard library imports (e.g. `import logging`, `from datetime import datetime`).
 2. Third-party library imports (e.g. `import requests`).
 3. Odoo core imports (e.g. `from odoo import api, fields, models, _`).
-4. Odoo exceptions & tools (`from odoo.exceptions import UserError`, `from odoo.tools import float_compare`).
+4. Odoo exceptions & tools (`from odoo.exceptions import UserError`, `from odoo.tools import float_compare, file_open, SQL`).
 5. Logger definition (`_logger = logging.getLogger(__name__)`).
 
 ### Using `self.ensure_one()`
-* Call `self.ensure_one()` at the start of methods that must operate on a single record.
+* Call `self.ensure_one()` at the start of methods that must operate on a single record (especially `action_*` methods).
 * Loop over `self` if the method can handle multiple records.
 
 ---
@@ -205,15 +247,23 @@ Write multi-company rules or per-user access limits:
 * Never use `.sudo()` without data validation and token check.
 * Webhooks requiring no login should disable CSRF (`csrf=False`) only after manual signature check.
 
-### `sudo()` Usage Rules
-Only use `sudo()` when business logic requires it (e.g. sending automated emails, writing log history) and **never** to evade ACLs or company record rules protecting sensitive data.
+### `sudo()` Usage Rules (Odoo House Rules)
+* **Narrowest scope**: Chain `.sudo()` only onto the exact record or method call needing escalation, not the entire recordset upfront.
+* **Mandatory comment**: Every usage of `sudo()` must carry an inline comment explaining why elevated privileges are required.
+* **Field-level access**: Be aware that `related=` crossing models is sudo-computed by default; protect sensitive fields with explicit `groups="..."`.
+* **Never** use `sudo()` to silently bypass ACLs or multi-company restrictions on sensitive commercial data.
 
 ---
 
-## 4. Security & Performance Checklist
+## 4. Security & Performance Checklist (Up to Odoo 20.0)
 - [ ] Every model has an ACL rule in `security/ir.model.access.csv`.
 - [ ] Multi-company models have a corresponding company `ir.rule` record rule.
-- [ ] Raw SQL queries do not contain f-string or string concatenations.
-- [ ] Cache invalidation is triggered after raw UPDATE/DELETE SQL calls.
+- [ ] Raw SQL queries do not contain f-string or string concatenations; use `SQL(...)` parameterization.
+- [ ] Cache invalidation is triggered after raw UPDATE/DELETE SQL calls (`env.invalidate_all()`).
 - [ ] `cr.commit()` is not used inside ordinary actions or buttons.
-- [ ] `auth="none"` endpoints verify requests manually.
+- [ ] `sudo()` calls are scoped to the minimum necessary and documented with a comment.
+- [ ] User-facing strings use `self.env._(...)` with static literals and keyword parameters.
+- [ ] Comments, docstrings, and strings use plain ASCII punctuation (no em dashes or curly quotes).
+- [ ] Files are opened with `odoo.tools.file_open` rather than standard `open()`.
+- [ ] Domains are combined using `odoo.fields.Domain` (&, |, ~, Domain.AND/OR).
+- [ ] `auth="none"` endpoints verify signatures manually.

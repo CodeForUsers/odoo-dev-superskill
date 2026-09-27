@@ -24,7 +24,7 @@ import subprocess
 import sys
 
 # Supported Odoo versions
-SUPPORTED_VERSIONS = {"16.0", "17.0", "18.0", "19.0"}
+SUPPORTED_VERSIONS = {"16.0", "17.0", "18.0", "19.0", "20.0"}
 
 
 def detect_from_manifest(module_path):
@@ -217,12 +217,12 @@ def main():
         # Also print version-specific guidance
         if version in ("16.0", "17.0"):
             print(f"  -> Use <tree> for list views (Odoo {version})")
-        elif version in ("18.0", "19.0"):
+        elif version in ("18.0", "19.0", "20.0"):
             print(f"  -> Use <list> for list views (Odoo {version})")
         sys.exit(0)
     else:
         print("Could not detect Odoo version automatically.")
-        print("Please specify the target version (16.0 / 17.0 / 18.0 / 19.0).")
+        print("Please specify the target version (16.0 / 17.0 / 18.0 / 19.0 / 20.0).")
         sys.exit(1)
 
 

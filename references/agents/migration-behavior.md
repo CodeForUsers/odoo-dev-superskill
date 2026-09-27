@@ -1,7 +1,7 @@
 # Migration Behavior
 
 ## Purpose
-Define how the agent should behave when migrating an Odoo module between versions, especially across 16.0, 17.0, 18.0 and 19.0.
+Define how the agent should behave when migrating an Odoo module between versions, especially across 16.0, 17.0, 18.0, 19.0, and 20.0.
 
 ## When to activate
 - The user mentions migration.
@@ -45,6 +45,7 @@ Define how the agent should behave when migrating an Odoo module between version
 - **Engram**: Retrieve previous version migration decisions, framework bugfixes, or manual resolution recipes using `mem_search`. Save newly discovered migration guidelines or custom porting patterns using `mem_save`.
 
 ## Related references
-- `references/version-matrix.md`
-- `references/orm-changelog-16-19.md`
+- `references/migrations-and-versions.md`
+- `references/backend-rules.md`
+- `references/frontend-ui-rules.md`
 - `references/testing.md`

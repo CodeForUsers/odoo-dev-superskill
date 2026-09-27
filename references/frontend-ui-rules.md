@@ -1,6 +1,6 @@
-# Frontend & UI Development Rules (Odoo v16.0 - v19.0)
+# Frontend & UI Development Rules (Odoo v16.0 - v20.0)
 
-This guide consolidates all XML view conventions, OWL 2 component guidelines, and Point of Sale (POS) architecture guidelines.
+This guide consolidates all XML view conventions, OWL 2 component guidelines, web asset rules, and Point of Sale (POS) architecture guidelines.
 
 ---
 
@@ -8,8 +8,8 @@ This guide consolidates all XML view conventions, OWL 2 component guidelines, an
 
 ### Conditional view tags: `<tree>` vs `<list>`
 * **Odoo 16.0 & 17.0**: Use `<tree>` tags.
-* **Odoo 18.0 & 19.0**: Use `<list>` tags.
-* **ID Naming**: It is recommended to use `_list` suffix in views for 18.0/19.0 (e.g. `view_sale_order_list`).
+* **Odoo 18.0, 19.0 & 20.0**: Use `<list>` tags. `<tree>` is obsolete and triggers syntax errors.
+* **ID Naming**: Use `_list` suffix in views for 18.0+ (e.g. `view_sale_order_list`).
 
 ```xml
 <!-- Odoo 16.0 / 17.0 View -->
@@ -23,7 +23,7 @@ This guide consolidates all XML view conventions, OWL 2 component guidelines, an
     </field>
 </record>
 
-<!-- Odoo 18.0 / 19.0 View -->
+<!-- Odoo 18.0 / 19.0 / 20.0 View -->
 <record id="view_partner_list" model="ir.ui.view">
     <field name="name">res.partner.list</field>
     <field name="model">res.partner</field>
@@ -35,39 +35,56 @@ This guide consolidates all XML view conventions, OWL 2 component guidelines, an
 </record>
 ```
 
-### Manual View Migration checklist
+### XML Record Conventions (Odoo 20 House Rules)
+* **Attribute Order**: In `<record>` tags, always place `id` before `model`:
+  `<record id="my_record_id" model="my.model">`
+* **Syntactic Sugar**: Prefer syntactic-sugar tags `<menuitem>`, `<template>`, and `<asset>` over raw `<record>`.
+* **Field Order**: Inside `<field>`, specify `name` first, followed by the value (tag body or `eval`), then optional attributes.
+* **View Inheritance**: Re-use the original XML id for inheriting views and append `.inherit.<details>` to the view name.
+* **Anchor View Inheritance on Names, Not Position**: Anchor xpaths on identifying attributes like `field[@name='...']`, never on brittle document positions like `//group[2]/field[3]`.
+
+### Manual View Migration checklist (16/17 -> 18/19/20)
 1. Replace `<tree` with `<list` and `</tree>` with `</list>` in all files.
 2. Keep attributes (`editable`, `create`, `delete`, `default_order`, `multi_edit`, `decoration-*`) inside the root tag.
 3. Update window actions: `<field name="view_mode">list,form</field>` (replaces `tree,form`).
 4. Update inheritance xpaths: `<xpath expr="//list" position="inside">` (replaces `//tree`).
 
 ### Indentation and XPath
-* Use **4 spaces** indentation. Long tags must have attributes on separate aligned lines.
+* Use **4 spaces** indentation.
 * Use robust `xpath` expressions based on field names: `<xpath expr="//field[@name='partner_id']" position="after">`.
-* Avoid fragile positions like `//group[1]/field[3]`.
 * Standard position keywords: `inside`, `before`, `after`, `replace`, `attributes`.
 
 ### XML ID Naming Standards
-Follow theTechnical pattern: `<module_name>.<type>_<model_with_underscores>_<variant>`.
+Follow the Technical pattern: `<module_name>.<type>_<model_with_underscores>_<variant>`.
 * View: `my_module.view_sale_order_form`
 * Action: `my_module.action_sale_order`
 * Menuitem: `my_module.menu_sale_order`
 * Security group: `my_module.group_sale_manager`
 
 ### The `invisible` Attribute syntax
-Starting from Odoo 16.0, direct domain evaluation replaces the old `attrs` dictionary:
+Starting from Odoo 16.0+, direct domain evaluation replaces the old `attrs` dictionary:
 ```xml
-<!-- ✅ Correct (Odoo 16.0+) -->
+<!-- ✅ Correct (Odoo 16.0 - 20.0) -->
 <field name="my_field" invisible="state != 'draft'"/>
 <field name="my_field" invisible="state != 'draft' or not partner_id"/>
 ```
 
 ---
 
-## 2. OWL 2 Component Development
+## 2. OWL 2 Component Development & Web Rules
+
+### Organize by Feature, Not by Type (Odoo 20 Standard)
+Do not split web assets into generic `components/`, `services/`, and `styles/` folders. Instead, organize by feature:
+```text
+static/src/
+└── order_summary/
+    ├── order_summary.js       # Component logic
+    ├── order_summary.xml      # Owl QWeb template
+    └── order_summary.scss     # Feature-specific styles
+```
 
 ### Component Structure
-A standard component is split into a JS file (logic) and an XML file (QWeb template).
+A standard component is split into JS logic and a QWeb template. Avoid getters (`get total()`); use plain methods or Owl computed state instead.
 
 ```javascript
 /** @odoo-module **/
@@ -88,8 +105,16 @@ export class MyComponent extends Component {
             this.state.records = await this.orm.searchRead("res.partner", [], ["name"]);
         });
     }
+
+    // ✅ Use a method instead of a getter
+    getRecordCount() {
+        return this.state.records.length;
+    }
 }
 ```
+
+### Avoid Patching JavaScript Code
+Prefer standard extension mechanisms (registries, component props, slots) rather than monkey-patching core JavaScript classes unless strictly necessary.
 
 ### Hooks & Services
 Always use `useService` inside `setup()` to fetch dependencies:

@@ -41,7 +41,7 @@ Define how the agent should behave when implementing or modifying integrations w
 - Assuming remote systems are always consistent or available.
 
 ## Related references
-- `references/security.md`
-- `references/sql-performance.md`
+- `references/ecommerce-connectors.md`
+- `references/backend-rules.md`
 - `references/testing.md`
 - `references/maturity-levels.md`

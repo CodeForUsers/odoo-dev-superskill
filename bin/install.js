@@ -37,7 +37,7 @@ try {
 
   console.log(`\n🎉 Successfully installed odoo-dev-superskill to:`);
   console.log(`   ${destDir}`);
-  console.log(`\nYour AI Agent is now equipped with the ultimate Odoo ICA development skill.`);
+  console.log(`\nYour AI Agent is now equipped with the ultimate Odoo OCA development skill.`);
   console.log(`Start a conversation with your agent and mention 'Odoo' or '__manifest__.py' to trigger it.\n`);
 
 } catch (error) {
